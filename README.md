@@ -16,9 +16,15 @@ The whole game is a single file, `index.html`. Open it in a browser to play.
 
 ## Multiplayer
 
-Online lobbies use the runtime features of a claude.ai Artifact: a shared database, live presence, and viewer identity. The live multiplayer version runs at the published artifact link.
+Play online at **https://kitten-summon-arena.vercel.app**.
 
-Opened from this repository directly, or hosted somewhere like GitHub Pages, the game runs in offline mode. Quick play against 3 bots works, but online lobbies are unavailable.
+1. Create a lobby. You get a 5-letter code and an invite link.
+2. Friends open the invite link, or enter the code under "Join a lobby".
+3. Fill empty seats with bots, then start the game.
+
+The host's browser runs the game, and other players connect to it directly with PeerJS (WebRTC). There is no game server. Keep the host's tab open: if the host leaves, the lobby closes. Some strict networks, such as certain office or school Wi-Fi, block direct connections.
+
+When the same file runs as a claude.ai Artifact, it uses the Artifact's shared database instead, with a public lobby list.
 
 ## Card art
 

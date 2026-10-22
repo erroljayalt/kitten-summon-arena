@@ -88,6 +88,11 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .field input{font:inherit;font-size:16px;text-transform:none;letter-spacing:0;color:var(--fg);background:#0e0b22;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .voice-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.voice-row input{flex:1;min-width:0;font:inherit;font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg);background:#0e0b22;border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.voice-row input::placeholder{letter-spacing:0;text-transform:none;color:var(--muted)}
+.invite{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;border:1px dashed var(--holo);border-radius:12px}
+.invite span{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.invite code{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px;color:var(--holo)}
 .voice-row select{flex:1;min-width:0;font:inherit;font-size:14px;text-transform:none;letter-spacing:0;color:var(--fg);background:#0e0b22;border:1px solid var(--line);border-radius:10px;padding:9px 10px}
 .voice-row select:focus-visible{outline:2px solid var(--holo);outline-offset:3px}
 .list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
@@ -202,7 +207,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
     <div class="voice-row"><select id="voicePick" aria-label="Announcer voice"></select><button class="btn alt sm" id="voiceTest">Test voice</button></div>
   </div>
   <p class="note" id="netNote">Connecting to the arena…</p>
-  <h2>Open lobbies</h2>
+  <h2 id="lobbiesTitle">Open lobbies</h2>
+  <div class="voice-row" id="joinRow" hidden><input id="joinCode" maxlength="5" autocomplete="off" spellcheck="false" placeholder="Lobby code, e.g. K7Q2M" aria-label="Lobby code"><button class="btn" id="joinBtn">Join</button></div>
   <ul class="list" id="lobbyList"><li class="empty">Looking for lobbies…</li></ul>
   <h2>How to play</h2>
   <ul class="rules">
@@ -217,6 +223,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 <section class="panel" id="lobbyPanel" hidden>
   <h1>Lobby <span class="code" id="lobbyCode"></span></h1>
   <p id="lobbySub">Waiting for players. 2 to 5 seats.</p>
+  <div class="invite" id="inviteRow" hidden><span>Invite link</span><code id="inviteLink"></code><button class="btn sm alt" id="copyInvite">Copy</button></div>
   <h2>Seats</h2>
   <ol class="list" id="seatList"></ol>
   <h2>Arena</h2>
@@ -1242,6 +1249,16 @@ $('#nick').addEventListener('input', () => { me.nick = $('#nick').value.trim().s
 const nickOrDefault = () => me.nick || 'Player';
 
 async function initNet() {
+  if (standalone) {
+    try { me.id = localStorage.getItem('ksa-uid'); } catch (e) {}
+    if (!me.id) { me.id = 'u' + Math.random().toString(36).slice(2, 12); try { localStorage.setItem('ksa-uid', me.id); } catch (e) {} }
+    db = P2P.db; netReady = true;
+    P2P.onHostLost(() => { if (lobby.code) exitToHome('The host left, so the lobby closed.'); });
+    renderHome();
+    const j = new URLSearchParams(location.search).get('join');
+    if (j) { $('#joinCode').value = j.slice(0, 5).toUpperCase(); $('#netNote').textContent = 'You were invited! Pick your name and cat, then press Join.'; }
+    return;
+  }
   [db, room, userCap] = await Promise.all([useCap('db'), useCap('room'), useCap('user')]);
   if (userCap) me.id = await userCap.id();
   if (!me.id) db = null;
@@ -1261,7 +1278,137 @@ async function initNet() {
   renderHome();
 }
 function setPresence() { if (room) room.presence({uid: me.id, nick: nickOrDefault(), lobby: lobby.code || null}).catch(() => {}); }
-const isUserOnline = uid => !room || uid === me.id || onlineIds.has(uid);
+const isUserOnline = uid => (!room && !standalone) || uid === me.id || onlineIds.has(uid);
+
+/* ======================= Standalone multiplayer (outside claude.ai) =======================
+   The host's browser keeps the lobby and game documents in memory and acts as the server.
+   Players connect to it peer-to-peer with PeerJS and get the same db-style API the game
+   uses on claude.ai: doc().set/update/delete/onSnapshot and collection().onSnapshot. */
+const standalone = !(window.claude && typeof window.claude.use === 'function');
+const P2P = (() => {
+  const store = new Map(), subs = new Set(), conns = new Map(), uidOf = new Map();
+  let peer = null, hosting = false, hostConn = null, hostCode = null, onLost = null;
+  const parentOf = p => p.split('/').slice(0, -1).join('/');
+  const docSnap = p => ({id: p.split('/').pop(), exists: store.has(p), data: () => store.get(p)});
+  const colSnap = c => { const docs = [...store.keys()].filter(k => parentOf(k) === c).map(docSnap); return {docs, size: docs.length, empty: !docs.length}; };
+  function notify(p) {
+    for (const s of [...subs]) {
+      try {
+        if (s.kind === 'doc' && s.path === p) s.cb(docSnap(p));
+        else if (s.kind === 'col' && parentOf(p) === s.path) s.cb(colSnap(s.path));
+      } catch (e) { console.warn(e); }
+    }
+  }
+  function apply(op) {
+    if (op.t === 'set') store.set(op.p, op.d);
+    else if (op.t === 'update') { if (!store.has(op.p)) return; store.set(op.p, {...store.get(op.p), ...op.d}); }
+    else if (op.t === 'del') store.delete(op.p);
+    notify(op.p);
+  }
+  function broadcast(msg) { for (const c of conns.values()) if (c.open) { try { c.send(msg); } catch (e) {} } }
+  function hostApply(op) { apply(op); broadcast({k: 'op', op}); }
+  function write(op) {
+    op = JSON.parse(JSON.stringify(op));
+    if (hosting || !hostConn) { hosting ? hostApply(op) : apply(op); return Promise.resolve(); }
+    if (!hostConn.open) return Promise.reject(new Error('disconnected'));
+    hostConn.send({k: 'op', op});
+    return Promise.resolve();
+  }
+  // A guest may only write its own seat request and its own moves.
+  function allowed(op, uid) {
+    if (!op || typeof op.p !== 'string' || !uid || !['set', 'update', 'del'].includes(op.t)) return false;
+    return op.p === `lobbies/${hostCode}/members/${uid}` || op.p === `games/${hostCode}/intents/${uid}`;
+  }
+  function sharePresence() {
+    onlineIds = new Set([me.id, ...uidOf.values()]);
+    broadcast({k: 'presence', ids: [...onlineIds]});
+    renderLobby();
+  }
+  function loadLib() {
+    if (window.Peer) return Promise.resolve();
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js';
+      s.onload = res; s.onerror = () => rej(new Error('Could not load the multiplayer library. Check your connection.'));
+      document.head.appendChild(s);
+    });
+  }
+  const peerId = code => 'kitten-summon-arena-' + code;
+  function reset() {
+    const p = peer; peer = null; hosting = false; hostConn = null; hostCode = null;
+    conns.clear(); uidOf.clear(); store.clear();
+    if (p) { try { p.destroy(); } catch (e) {} }
+  }
+  async function host(code) {
+    await loadLib(); reset();
+    return new Promise((res, rej) => {
+      const p = peer = new Peer(peerId(code));
+      p.on('open', () => { hosting = true; hostCode = code; onlineIds = new Set([me.id]); res(); });
+      p.on('error', e => { if (!hosting) rej(e); else console.warn('peer error', e.type); });
+      p.on('disconnected', () => { if (peer === p) { try { p.reconnect(); } catch (e) {} } });
+      p.on('connection', c => {
+        c.on('open', () => {
+          conns.set(c.peer, c); uidOf.set(c.peer, String((c.metadata || {}).uid || ''));
+          c.send({k: 'sync', entries: [...store.entries()]});
+          sharePresence();
+        });
+        c.on('data', m => { if (m && m.k === 'op' && allowed(m.op, uidOf.get(c.peer))) hostApply(m.op); });
+        c.on('close', () => {
+          const uid = uidOf.get(c.peer);
+          conns.delete(c.peer); uidOf.delete(c.peer);
+          const L = store.get('lobbies/' + hostCode), mp = `lobbies/${hostCode}/members/${uid}`;
+          if (uid && store.has(mp) && (!L || L.status !== 'playing')) hostApply({t: 'del', p: mp});
+          sharePresence();
+        });
+      });
+    });
+  }
+  async function join(code) {
+    await loadLib(); reset();
+    return new Promise((res, rej) => {
+      let done = false;
+      const fail = msg => { if (done) return; done = true; clearTimeout(timer); reset(); rej(new Error(msg)); };
+      const timer = setTimeout(() => fail('Could not reach that lobby. Check the code and try again.'), 15000);
+      const p = peer = new Peer();
+      p.on('error', e => {
+        if (e.type === 'peer-unavailable') fail(`No lobby with code ${code.toUpperCase()} is open right now.`);
+        else if (!done) fail('Could not connect (' + (e.type || 'network') + '). Try again.');
+      });
+      p.on('open', () => {
+        const c = hostConn = p.connect(peerId(code), {metadata: {uid: me.id}, reliable: true});
+        c.on('data', m => {
+          if (!m) return;
+          if (m.k === 'sync') {
+            store.clear(); for (const [path, d] of m.entries) store.set(path, d);
+            if (!done) { done = true; clearTimeout(timer); res(); }
+            for (const path of [...store.keys()]) notify(path);
+          } else if (m.k === 'op' && m.op) apply(m.op);
+          else if (m.k === 'presence') { onlineIds = new Set(m.ids); renderLobby(); }
+        });
+        c.on('close', () => { if (hostConn === c) { hostConn = null; if (onLost) onLost(); } });
+      });
+    });
+  }
+  const db = {
+    doc(p) {
+      return {
+        set: d => write({t: 'set', p, d}),
+        update: d => write({t: 'update', p, d}),
+        delete: () => write({t: 'del', p}),
+        get: () => Promise.resolve(docSnap(p)),
+        onSnapshot(cb) { const s = {kind: 'doc', path: p, cb}; subs.add(s); setTimeout(() => { if (subs.has(s)) cb(docSnap(p)); }); return () => subs.delete(s); },
+      };
+    },
+    collection(p) {
+      const q = {
+        orderBy: () => q, limit: () => q,
+        onSnapshot(cb) { const s = {kind: 'col', path: p, cb}; subs.add(s); setTimeout(() => { if (subs.has(s)) cb(colSnap(p)); }); return () => subs.delete(s); },
+      };
+      return q;
+    },
+  };
+  return {db, host, join, leave: reset, onHostLost(fn) { onLost = fn; }};
+})();
 
 /* ======================= Lobby screens ======================= */
 let lobbies = [];
@@ -1277,6 +1424,13 @@ function showScreen(name) {
 }
 function renderHome() {
   const note = $('#netNote');
+  if (standalone && netReady) {
+    note.textContent = 'Create a lobby and share its code or invite link, or join a friend with their code.';
+    note.classList.remove('warn');
+    $('#createBtn').disabled = false;
+    $('#lobbyList').hidden = true; $('#joinRow').hidden = false; $('#lobbiesTitle').textContent = 'Join a lobby';
+    return;
+  }
   if (!netReady) note.textContent = 'Connecting to the arena…';
   else if (!db) note.textContent = 'Online lobbies need you signed in with access to this page. Quick play against bots works offline.';
   else note.textContent = `${onlineIds.size || 1} player${onlineIds.size === 1 ? '' : 's'} online here right now.`;
@@ -1301,6 +1455,11 @@ function genCode() { const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let s = ''; fo
 async function createLobby() {
   if (!db) return;
   const code = genCode(), now = Date.now();
+  if (standalone) {
+    $('#netNote').textContent = 'Opening your lobby…';
+    try { await P2P.host(code); }
+    catch (e) { $('#netNote').textContent = 'Could not open a lobby (' + (e.type || e.message) + '). Try again.'; $('#netNote').classList.add('warn'); return; }
+  }
   try {
     await db.doc('lobbies/' + code).set({code, name: `${nickOrDefault()}'s table`, host: me.id, status: 'open', bots: [], kicked: [], stage: me.stage,
       seats: [{kind: 'human', uid: me.id, nick: nickOrDefault(), look: me.look}], created: now, updated: now});
@@ -1313,6 +1472,16 @@ async function createLobby() {
 }
 async function joinLobby(code) {
   if (!db) return;
+  code = String(code || '').trim().toLowerCase();
+  if (standalone) {
+    if (!/^[a-z0-9]{5}$/.test(code)) { $('#netNote').textContent = 'Lobby codes are 5 letters or numbers.'; $('#netNote').classList.add('warn'); return; }
+    $('#netNote').textContent = `Connecting to lobby ${code.toUpperCase()}…`; $('#netNote').classList.remove('warn');
+    try { await P2P.join(code); }
+    catch (e) { $('#netNote').textContent = e.message; $('#netNote').classList.add('warn'); return; }
+    const snap = await db.doc('lobbies/' + code).get();
+    if (!snap.exists) { P2P.leave(); $('#netNote').textContent = 'That lobby has closed.'; return; }
+    lobbies = [snap.data()];
+  }
   const l = lobbies.find(x => x.code === code);
   if (l && l.status === 'open' && !l.seats.some(s => s.uid === me.id) && l.seats.length < 5) {
     try { await db.doc(`lobbies/${code}/members/${me.id}`).set({nick: nickOrDefault(), look: me.look, at: Date.now()}); }
@@ -1372,7 +1541,8 @@ function renderLobby() {
     const canRemove = lobby.hosting && L.status !== 'playing' && s.uid !== me.id;
     const lk = cleanLook(s.look), accName = ACCS.find(a => a[0] === lk.acc)[1];
     return `<li><span class="dot" style="--c:${lk.fur};box-shadow:0 0 0 3px ${SEAT_COLORS[i]}"></span><div class="grow"><b>${esc(s.nick)}</b><span>Seat ${i + 1}${lk.acc !== 'none' ? ` · ${accName}` : ''}</span></div>${tags.map(t => `<span class="pill${t === 'You' || t === 'Host' ? ' on' : ''}">${t}</span>`).join('')}${canRemove ? `<button class="btn sm alt" data-rm="${i}">Remove</button>` : ''}</li>`;
-  }).join('') + (L.seats.length < 5 ? `<li class="empty">${5 - L.seats.length} empty seat${L.seats.length === 4 ? '' : 's'} · share this page so friends can join</li>` : '');
+  }).join('') + (L.seats.length < 5 ? `<li class="empty">${5 - L.seats.length} empty seat${L.seats.length === 4 ? '' : 's'} · ${standalone ? 'send friends the invite link' : 'share this page so friends can join'}</li>` : '');
+  if (standalone) { $('#inviteRow').hidden = false; $('#inviteLink').textContent = location.origin + location.pathname + '?join=' + L.code.toUpperCase(); }
   $('#hostCtl').hidden = !lobby.hosting || L.status === 'playing';
   $('#addBot').disabled = L.seats.length >= 5;
   $('#startBtn').disabled = L.seats.length < 2;
@@ -1390,6 +1560,14 @@ $('#addBot').addEventListener('click', () => {
   hostSyncSeats({bots: [...L.bots, name]});
 });
 $('#createBtn').addEventListener('click', createLobby);
+$('#joinBtn').addEventListener('click', () => joinLobby($('#joinCode').value));
+$('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') joinLobby($('#joinCode').value); });
+$('#copyInvite').addEventListener('click', () => {
+  const t = $('#inviteLink').textContent, b = $('#copyInvite');
+  const done = ok => { b.textContent = ok ? 'Copied' : 'Select and copy'; setTimeout(() => b.textContent = 'Copy', 1800); };
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => done(true), () => done(false)); else done(false);
+  const r = document.createRange(); r.selectNodeContents($('#inviteLink')); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+});
 $('#soloBtn').addEventListener('click', startSolo);
 $('#leaveLobby').addEventListener('click', () => exitToHome());
 $('#backToGame').addEventListener('click', () => showScreen('game'));
@@ -1407,6 +1585,7 @@ async function exitToHome(msg) {
   if (db && code) {
     if (wasHost) db.doc('lobbies/' + code).update({status: 'closed', updated: Date.now()}).catch(() => {});
     else db.doc(`lobbies/${code}/members/${me.id}`).delete().catch(() => {});
+    if (standalone) P2P.leave();
   }
 }
 function watchGame(code) {
