@@ -6,13 +6,16 @@ The whole game is a single file, `index.html`. Open it in a browser to play.
 
 ## Features
 
-- Full base-game rules: Attack (stacking), Skip, Favor, Shuffle, See the Future, Nope (including Nope chains), Defuse, Exploding Kittens, and cat-card pairs and triples.
+- Two decks: **Classic** (13 card types, 2 to 5 players) and **Party** (49 card types, 2 to 15 players), including Targeted Attack, Reverse, Alter the Future, Undead Kitten, Collapsing Kitten, Sun Cat and many more.
+- Full rules: Attack stacking, Nope chains, play-any-time cards, cat-card pairs and triples with wild Feral Cats.
 - 3D table with an animated hologram for every card, card flights, and explosion effects.
-- Computer opponents that remember See the Future and Nope attacks aimed at them.
-- Cat customization: fur color, eye color, and headwear, with a live 3D preview.
+- Computer opponents that remember what they have seen and react to the table.
+- Cat customization: fur, eyes, pattern and headwear, in a cozy loaf-cat style with a live 3D preview.
 - Seven arenas: outer space, beach, living room, bar, pyramids, neon rooftop, and volcano.
-- Sound effects and two background music tracks, all synthesized with the Web Audio API. Music and sound can be turned on or off separately.
-- MC Whiskers, a roasting announcer that uses the browser's built-in speech voices, with a voice picker.
+- Synthesized sound effects and music, with a sound menu for sound, music and the announcer.
+- MC Whiskers, a roasting announcer with over 400 lines.
+- An in-game card guide that explains every card and combo.
+- Works on phones: compact top bar, adaptive camera and seat layout, labels that stay on screen.
 
 ## Multiplayer
 
