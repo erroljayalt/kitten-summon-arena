@@ -225,6 +225,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .steps b{color:var(--fg)}
 .guide-note{margin:14px 0 0;padding:10px 12px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:13px;line-height:1.45}
 @media (max-width:520px){.gcard{grid-template-columns:64px minmax(0,1fr)}.gcard img{width:64px}}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:17}
+.lbl.rpick,.chip.rpick{border-color:#ffd23f;box-shadow:0 0 0 2px #ffd23f,0 0 22px -2px #ffd23f}
 #flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:15;background:radial-gradient(circle at 50% 45%,#fff3c4 0,#ff7a1a 30%,rgba(255,77,109,.55) 60%,transparent 85%)}
 #flash.go{animation:flash 1.3s ease-out both}
 @keyframes fxpop{0%{opacity:0;scale:.4}15%{opacity:1;scale:1.15}70%{opacity:1;scale:1}100%{opacity:0;scale:1;translate:0 -24px}}
@@ -397,6 +399,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
   </div>
 </div>
 <div id="flash"></div>
+<canvas id="confetti" hidden></canvas>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -473,6 +476,7 @@ const shuffleArr = a => { for (let i = a.length - 1; i > 0; i--) { const j = ran
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone = o => JSON.parse(JSON.stringify(o));
 const V3 = THREE.Vector3;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ======================= Cat looks ======================= */
 const FURS = ['#f2a65a','#ff9ec4','#f5f0e6','#8a8f9e','#3a3340','#f0d27a','#9fd8ff','#b98bff','#efe2c8','#8b6b55'];
@@ -628,6 +632,7 @@ const Sfx = (() => {
     steal() { noise({dur: .3, vol: .14, f: 2000, f2: 500, q: 1.5}); tone(620, {f2: 320, type: 'triangle', dur: .3, vol: .08}); },
     alert() { notes([988, 988], .12, {type: 'square', dur: .08, vol: .07}); },
     chat() { notes([1046, 1568], .06, {dur: .12, vol: .05}); },
+    firework() { noise({dur: .9, vol: .4, f: 1200, f2: 120, q: .5, kind: 'lowpass'}); for (let i = 0; i < 7; i++) noise({dur: .06, vol: .12, f: 5000 + Math.random() * 2000, q: .7, kind: 'highpass', delay: .15 + Math.random() * .5}); },
     win() { notes([523, 659, 784, 1047, 784, 1047, 1319], .13, {type: 'triangle', dur: .4, vol: .14}); },
   };
   return api;
@@ -1066,6 +1071,13 @@ const Announcer = (() => {
       'Did {P} go make a sandwich? Asking for the table.',
       '{P}, the cards will not play themselves. I checked.',
     ],
+    roulette: [
+      'The wheel has spoken! {P} goes first. Good luck, you will need it.',
+      '{P} goes first! The universe clearly has a sense of humor.',
+      'Roulette picks {P}! Everyone else, relax. For now.',
+      'And the lucky victim is {P}! Lead us into disaster.',
+      '{P} starts! No pressure. Okay, a lot of pressure.',
+    ],
     win: [
       '{P} WINS! Everyone else, please reflect on your choices.',
       'Champion, {P}! The last cat standing, mostly by accident.',
@@ -1314,6 +1326,7 @@ const Announcer = (() => {
       case 'transfer': if (e.why === 'favor') line('gave', {T: N(e.from)}, 0); else if (Math.random() < .85) line('stolen', {T: N(e.from)}, 0); break;
       case 'miss': line('miss', {P, T: N(e.target), C: TYPES[e.named].name}, 1); break;
       case 'win': line('win', {P}, 3); break;
+      case 'roulette': setTimeout(() => line('roulette', {P}, 2), 4300); break;
       case 'revive': line('revive', {P}, 2); break;
       case 'implodeHide': line('implodeHide', {P}, 2); break;
       case 'blindFail': line('blindFail', {P}, 1); break;
@@ -2864,6 +2877,9 @@ async function startEngine(fresh) {
     if (!stillHost(tok)) return;
     const kits = G.extra.filter(isKit).length;
     await emitEv({k: 'kittens', n: kits, spare: G.extra.length - kits, list: G.extra}, 3000);
+    if (!stillHost(tok)) return;
+    G.cur = rand(G.seats.length); G.tl = 1;
+    await emitEv({k: 'roulette', p: G.cur}, 6400);
   } else await publish();
   if (!stillHost(tok)) return;
   await runEngine(tok);
@@ -3362,6 +3378,137 @@ function takeOver() {
 }
 $('#takeover').addEventListener('click', takeOver);
 
+/* ======================= Roulette arrow, tombstones, fireworks, confetti ======================= */
+const rouletteArrow = (() => {
+  const shape = new THREE.Shape();
+  shape.moveTo(-.12, 0); shape.lineTo(.12, 0); shape.lineTo(.12, 1.25); shape.lineTo(.34, 1.25); shape.lineTo(0, 1.75); shape.lineTo(-.34, 1.25); shape.lineTo(-.12, 1.25); shape.closePath();
+  const geo = new THREE.ShapeGeometry(shape); geo.rotateX(-Math.PI / 2);   // lies flat, points along -z before the group turns it
+  const mat = new THREE.MeshBasicMaterial({color: '#ffd23f', transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide});
+  const g = new THREE.Group(); const m = new THREE.Mesh(geo, mat); m.rotation.y = Math.PI; g.add(m);
+  const hub = new THREE.Mesh(new THREE.CircleGeometry(.28, 32), mat); hub.rotation.x = -Math.PI / 2; g.add(hub);
+  g.position.y = .09; g.visible = false; scene.add(g);
+  return g;
+})();
+// Angle (around the table) that points from the center toward a seat; your own seat is toward the camera.
+function seatAngle(s) { const p = s === view.mySeat || !view.seatObjs[s] ? new V3(0, 0, 6) : view.seatObjs[s].pos; return Math.atan2(p.x, p.z); }
+async function playRoulette(winner) {
+  const N = view.snap.seats.length, seats = [...Array(N).keys()];
+  const angs = seats.map(seatAngle);
+  const norm = a => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  const start = norm(rouletteArrow.rotation.y), target = norm(angs[winner]);
+  const end = start + Math.PI * 2 * 4 + norm(target - start);
+  rouletteArrow.visible = true; rouletteArrow.children.forEach(c => c.material.opacity = .95);
+  banner('Who goes first?', '#ffd23f');
+  let lastPick = -1;
+  await tween(reduceMotion ? .4 : 4.2, k => {
+    const e = 1 - Math.pow(1 - k, 4);
+    const a = start + (end - start) * e; rouletteArrow.rotation.y = a;
+    let best = 0, bd = 9;
+    seats.forEach(s => { const d = Math.abs(Math.atan2(Math.sin(a - angs[s]), Math.cos(a - angs[s]))); if (d < bd) { bd = d; best = s; } });
+    if (best !== lastPick) { lastPick = best; Sfx.click(); highlightPick(best); }
+  });
+  highlightPick(winner, true);
+  banner(`${nm(winner)} ${winner === view.mySeat ? 'go' : 'goes'} first!`, view.snap.seats[winner].color);
+  Sfx.turn(winner === view.mySeat); showFx('FIRST!', '#ffd23f');
+  await sleep(1200);
+  await tween(.5, k => rouletteArrow.children.forEach(c => c.material.opacity = .95 * (1 - k)));
+  rouletteArrow.visible = false; highlightPick(-1);
+}
+function highlightPick(s, final) {
+  view.seatObjs.forEach((o, i) => { if (o) o.lbl.classList.toggle('rpick', i === s); });
+  $('#turnChip').parentElement.classList.toggle('rpick', s === view.mySeat && s >= 0);
+  if (final && s >= 0 && view.seatObjs[s]) { const r = view.seatObjs[s].ring; r.material.opacity = 1; }
+}
+
+function buildTomb(nick) {
+  const g = new THREE.Group();
+  const stone = new THREE.MeshToonMaterial({color: '#9a97b3', gradientMap: TOON_GRAD});
+  const slabG = roundedBox(1.0, 1.4, .26, .32, 4);
+  const slab = new THREE.Mesh(slabG, stone); slab.position.y = .92; g.add(slab);
+  const ink = new THREE.Mesh(slabG, INK); ink.scale.setScalar(1.04); slab.add(ink);
+  const c = document.createElement('canvas'); c.width = 256; c.height = 320; const x = c.getContext('2d');
+  x.fillStyle = '#4a4762'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = '64px Bungee, Impact, sans-serif'; x.fillText('R.I.P.', 128, 120);
+  let fs = 40; do { x.font = `600 ${fs}px "Chakra Petch", sans-serif`; fs -= 2; } while (x.measureText(nick).width > 220 && fs > 16);
+  x.fillText(nick, 128, 200);
+  x.strokeStyle = '#4a4762'; x.lineWidth = 6; x.lineCap = 'round';
+  x.beginPath(); x.moveTo(128, 238); x.lineTo(128, 290); x.moveTo(108, 256); x.lineTo(148, 256); x.stroke();
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(.8, 1.0), new THREE.MeshBasicMaterial({map: canvasTex(c), transparent: true}));
+  face.position.set(0, .9, .135); g.add(face);
+  const dirt = new THREE.Mesh(new THREE.SphereGeometry(.7, 20, 10), new THREE.MeshToonMaterial({color: '#6b4a32', gradientMap: TOON_GRAD}));
+  dirt.scale.set(1, .22, .8); dirt.position.set(0, .08, .35); g.add(dirt);
+  const grass = new THREE.MeshToonMaterial({color: '#5fbf5a', gradientMap: TOON_GRAD});
+  [[-.45, .3], [.4, .45], [-.2, .62], [.15, .2]].forEach(([gx, gz]) => { const t = new THREE.Mesh(new THREE.ConeGeometry(.06, .22, 6), grass); t.position.set(gx, .14, gz); g.add(t); });
+  const ghost = new THREE.Group();
+  const gm = new THREE.MeshBasicMaterial({color: '#eef2ff', transparent: true, opacity: .7, depthWrite: false});
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.22, 20, 14), gm); ghost.add(head);
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(.22, .34, 20, 1, true), gm); tail.rotation.x = Math.PI; tail.position.y = -.2; ghost.add(tail);
+  [-1, 1].forEach(sd => { const ear = new THREE.Mesh(new THREE.ConeGeometry(.07, .12, 8), gm); ear.position.set(.12 * sd, .2, 0); ear.rotation.z = -.4 * sd; ghost.add(ear);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), new THREE.MeshBasicMaterial({color: '#2b2024'})); eye.position.set(.075 * sd, .03, .2); ghost.add(eye); });
+  ghost.position.set(.55, 1.9, .1); g.add(ghost);
+  g.userData.ghost = ghost; g.scale.y = .01; g.position.y = .22;
+  return g;
+}
+
+const Fireworks = (() => {
+  const bursts = [], COLORS = ['#ffd23f', '#ff5a76', '#62f0ff', '#3ee0a1', '#b98bff', '#ff9a3a', '#ffffff'];
+  function burstAt(pos, color) {
+    const n = 110, p = new Float32Array(n * 3), v = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      p[i * 3] = pos.x; p[i * 3 + 1] = pos.y; p[i * 3 + 2] = pos.z;
+      const d = new V3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize().multiplyScalar(2.4 + Math.random() * 1.2);
+      v[i * 3] = d.x; v[i * 3 + 1] = d.y; v[i * 3 + 2] = d.z;
+    }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+    const mat = new THREE.PointsMaterial({size: .34, map: dotTex, color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false});
+    const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; scene.add(pts);
+    bursts.push({pts, geo, mat, v, life: 2, max: 2});
+    const l = new THREE.PointLight(color, 1.4, 10); l.position.copy(pos); scene.add(l); bursts[bursts.length - 1].light = l;
+    Sfx.firework();
+  }
+  function show() {
+    const count = reduceMotion ? 3 : 12;
+    for (let i = 0; i < count; i++) setTimeout(() => burstAt(new V3((Math.random() - .5) * 8, 2.6 + Math.random() * 2.2, -.5 - Math.random() * 3), COLORS[rand(COLORS.length)]), i * 420);
+  }
+  function update(dt) {
+    for (const b of [...bursts]) {
+      b.life -= dt;
+      const p = b.geo.attributes.position.array;
+      for (let i = 0; i < b.v.length; i += 3) { b.v[i + 1] -= 2.2 * dt; b.v[i] *= .985; b.v[i + 1] *= .985; b.v[i + 2] *= .985; p[i] += b.v[i] * dt; p[i + 1] += b.v[i + 1] * dt; p[i + 2] += b.v[i + 2] * dt; }
+      b.geo.attributes.position.needsUpdate = true;
+      b.mat.opacity = Math.max(0, b.life / b.max); b.light.intensity = Math.max(0, 1.4 * (b.life / b.max - .6));
+      if (b.life <= 0) { scene.remove(b.pts); scene.remove(b.light); b.geo.dispose(); b.mat.dispose(); bursts.splice(bursts.indexOf(b), 1); }
+    }
+  }
+  return {show, update};
+})();
+
+const Confetti = (() => {
+  const cv = $('#confetti'), cx = cv.getContext('2d'), COLORS = ['#ffd23f', '#ff5a76', '#62f0ff', '#3ee0a1', '#b98bff', '#ff9ec4', '#ffffff'];
+  let parts = [], until = 0, raf = 0, W = 0, H = 0, dpr = 1;
+  function start(ms = 7000) {
+    dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    parts = Array.from({length: reduceMotion ? 70 : 240}, () => ({x: Math.random() * W, y: -Math.random() * H * .7 - 10, vx: (Math.random() - .5) * 2.4, vy: 1.6 + Math.random() * 3,
+      r: Math.random() * 6.28, vr: (Math.random() - .5) * .3, w: 6 + Math.random() * 7, h: 9 + Math.random() * 9, c: COLORS[rand(COLORS.length)]}));
+    until = performance.now() + ms; cv.hidden = false;
+    if (!raf) raf = requestAnimationFrame(step);
+  }
+  function step(t) {
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0); cx.clearRect(0, 0, W, H);
+    let alive = 0;
+    for (const p of parts) {
+      p.vy = Math.min(p.vy + .03, 5); p.x += p.vx + Math.sin(t / 380 + p.r) * .6; p.y += p.vy; p.r += p.vr;
+      if (p.y > H + 20 && t < until) { p.y = -20; p.x = Math.random() * W; }
+      if (p.y < H + 20) alive++;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.fillRect(-p.w / 2, -p.h / 2 * Math.abs(Math.cos(p.r * 1.7)), p.w, p.h * Math.abs(Math.cos(p.r * 1.7)) + 1); cx.restore();
+    }
+    if (t < until || alive) raf = requestAnimationFrame(step);
+    else { raf = 0; cv.hidden = true; cx.clearRect(0, 0, W, H); }
+  }
+  return {start};
+})();
+
 /* ======================= Client view ======================= */
 const view = {screen: 'home', code: null, started: 0, ver: 0, snap: null, mySeat: -1, lastSeq: 0, queue: [], playing: false, mirror: null,
   hand: [], handoff: new Map(), seatObjs: [], fanN: [], boomMesh: null, log: [], sentFor: 0, modalFor: 0, reactId: 0, hostGoneAt: 0, waiting: false};
@@ -3403,7 +3550,7 @@ function layoutSeats() {
 function setupGame(snap) {
   clearTable(); closeModal();
   setStage(snap.stage || 'space');
-  view.code = snap.code; view.started = snap.started; view.ver = 0;
+  view.code = snap.code; view.started = snap.started; view.ver = 0; view.winner = -1;
   view.mySeat = snap.seats.findIndex(x => x.kind === 'human' && x.uid === me.id);
   view.log = []; $('#log').innerHTML = '';
   view.queue = []; view.sentFor = 0; view.modalFor = 0; view.reactId = 0;
@@ -3493,8 +3640,8 @@ function applyMirror(snapCards) {
   view.seatObjs.forEach((o, s) => {
     if (!o) return;
     const av = o.avatar, alive = M.alive[s];
-    av.userData.mat.color.copy(alive ? av.userData.color : new THREE.Color('#4a4660'));
-    av.rotation.z = alive ? 0 : .9;
+    if (!alive && !o.tomb) { o.tomb = buildTomb(view.snap.seats[s].nick); o.group.add(o.tomb); }
+    av.visible = alive; if (o.tomb) o.tomb.visible = !alive;
   });
   reconcileHand();
   updateBar();
@@ -3627,6 +3774,7 @@ function logEvent(e) {
     }
     case 'miss': log(`${nm(e.target)} had no ${T(e.named)}.`); break;
     case 'win': log(`${nm(e.p)} ${e.p === view.mySeat ? 'win' : 'wins'}!`); break;
+    case 'roulette': log(`The roulette picked ${nmObj(e.p)} to go first.`); break;
   }
 }
 async function animEvent(e) {
@@ -3760,11 +3908,13 @@ async function animEvent(e) {
       dismissHolo(); break;
     }
     case 'doom': flash(); shake = .6; Sfx.boom(); showFx('CAT-ASTROPHE', '#ff3a2a'); banner('Cat-astrophe! The Shadow Cat cannot be defused anymore.', '#ff3a2a'); await sleep(800); break;
+    case 'roulette': await playRoulette(e.p); break;
     case 'win': {
       const w = e.p, mine = w === view.mySeat;
       summon('defuse', null, mine ? 'VICTORY' : `${nm(w).toUpperCase()} WINS`);
-      Sfx.win();
-      await sleep(1300);
+      Sfx.win(); view.winner = w;
+      Fireworks.show(); Confetti.start(7500);
+      await sleep(3600);
       const host = G && G.host === me.id;
       const opts = view.code === 'solo' ? [{label: 'Play again', value: 'again'}, {label: 'Main menu', value: 'home', cls: 'alt'}]
         : host ? [{label: 'Back to lobby', value: 'lobby'}] : [{label: 'Back to lobby', value: 'lobby'}];
@@ -4088,7 +4238,15 @@ function loop() {
   }
   if (currentHolo) animHolo(currentHolo, t, dt);
   for (const h of [...fading]) if (animHolo(h, t, dt)) { fading.splice(fading.indexOf(h), 1); disposeHolo(h); }
-  view.seatObjs.forEach((o, s) => { if (o && view.mirror && view.mirror.alive[s]) o.avatar.position.y = 1.45 + Math.sin(t * 1.6 + s) * .05; else if (o) o.avatar.position.y = .9; });
+  view.seatObjs.forEach((o, s) => {
+    if (!o) return;
+    o.avatar.position.y = 1.45 + (view.winner === s ? Math.abs(Math.sin(t * 6)) * .45 : Math.sin(t * 1.6 + s) * .05);
+    if (o.tomb && o.tomb.visible) {
+      if (o.tomb.scale.y < 1) o.tomb.scale.y = Math.min(1, o.tomb.scale.y + dt * 1.6);
+      o.tomb.userData.ghost.position.y = 1.9 + Math.sin(t * 2 + s) * .12;
+    }
+  });
+  Fireworks.update(dt);
   if (view.screen !== 'game') { ringA.rotation.z += dt * .2; }
   camera.position.copy(camBase);
   if (shake > 0) { camera.position.x += (Math.random() - .5) * shake; camera.position.y += (Math.random() - .5) * shake; shake = Math.max(0, shake - dt * 1.4); }
