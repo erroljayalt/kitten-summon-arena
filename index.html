@@ -174,6 +174,34 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .opt:hover img{transform:translateY(-4px)}
 .opt.static{cursor:default}
 .opt.static:hover img{transform:none}
+.chatbtn{position:relative}
+.badge{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;box-sizing:border-box;border-radius:999px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;letter-spacing:0;display:grid;place-items:center;padding:0 4px}
+.micbtn svg{width:15px;height:15px}
+.micbtn[aria-pressed="true"]{background:var(--danger);border-color:var(--danger);color:#fff}
+.micbtn.talk{box-shadow:0 0 0 3px rgba(255,77,109,.45)}
+.chat{position:fixed;right:max(12px,env(safe-area-inset-right,0px));top:calc(max(12px,env(safe-area-inset-top,0px)) + 44px);width:min(360px,calc(100% - 24px));max-height:min(560px,calc(100% - 150px));display:flex;flex-direction:column;background:#141030;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55);z-index:18;overflow:hidden}
+.chat-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.chat-head b{flex:1;font-family:var(--f-display);font-weight:400;font-size:.95rem}
+.voice-box{padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);display:grid;gap:6px}
+.voice-box b{color:var(--fg)}
+.voice-row2{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vp{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font:inherit;font-size:12px;color:var(--fg);background:transparent;cursor:pointer}
+.vp.talk{border-color:var(--ok);box-shadow:0 0 10px -2px var(--ok)}
+.vp[aria-pressed="true"]{opacity:.5;text-decoration:line-through}
+.vp:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
+.chat-log{list-style:none;margin:0;padding:10px 12px;overflow:auto;flex:1;display:grid;gap:6px;align-content:start;min-height:120px}
+.chat-log li{font-size:14px;line-height:1.35;overflow-wrap:anywhere;color:#dcd9f6}
+.chat-log li b{margin-right:6px}
+.chat-log .empty{color:var(--muted);font-size:13px}
+.chat-quick{display:flex;gap:6px;overflow-x:auto;padding:6px 12px;border-top:1px solid var(--line)}
+.chat-quick button{flex:none}
+.chat-form{display:flex;gap:6px;padding:8px 12px 12px}
+.chat-form input{flex:1;min-width:0;font:inherit;font-size:16px;color:var(--fg);background:#0e0b22;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.bubble{position:absolute;left:0;top:0;max-width:200px;background:#fff;color:#1a1426;font-size:12.5px;font-weight:600;line-height:1.3;padding:6px 10px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.4);pointer-events:none;overflow-wrap:anywhere}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
+.lbl .micdot{display:inline-flex;color:var(--ok)}
+.lbl.speaking{box-shadow:0 0 0 2px var(--ok),0 0 16px -2px var(--ok)}
+@media (max-width:640px){.chat{left:10px;right:10px;width:auto;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);max-height:62vh}}
 #guide{position:fixed;inset:0;display:grid;place-items:center;background:rgba(6,5,14,.72);z-index:25;padding:16px;box-sizing:border-box}
 .guide-sheet{width:min(780px,100%);max-height:88vh;display:flex;flex-direction:column;background:#141030;border:1px solid var(--line);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden}
 .guide-head{display:flex;align-items:center;gap:12px;padding:16px 18px 0}
@@ -211,7 +239,9 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
   #log li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #log li:nth-child(n+2){display:none}
   .chip .t,.chipbtn .t,#drawBtn .t{display:none}
-  .chip,.chipbtn{padding:5px 8px;font-size:11px;gap:4px;letter-spacing:.04em}
+  .chip,.chipbtn{padding:5px 7px;font-size:11px;gap:4px;letter-spacing:.03em}
+  .chipbtn.icon svg:last-child{display:none}
+  .chips{gap:3px}
   .chip.turn{margin-right:auto;min-width:0;overflow:hidden}
   #turnChip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lbl{font-size:11px;padding:3px 7px;gap:5px;border-radius:8px}
@@ -247,6 +277,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
       <span class="chip fxchip" id="dirChip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5M20 12a8 8 0 0 1-14 5"/><path d="M18 3v4h-4M6 21v-4h4"/></svg><span class="t">Reversed</span></span>
       <span class="chip fxchip sun" id="sunChip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span class="t">Sun Cat on shrine</span></span>
       <span class="chip fxchip doom" id="doomChip" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c2 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 3 3 5 1-3 1-6 1-9z"/></svg><span class="t">Cat-astrophe</span></span>
+      <button class="chipbtn chatbtn" id="chatBtn" aria-label="Open chat" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="t">Chat</span><span class="badge" id="chatBadge" hidden>0</span></button>
+      <button class="chipbtn micbtn" id="micBtn" aria-pressed="false" aria-label="Turn your mic on" hidden></button>
       <button class="chipbtn guide guide-open" aria-label="Card guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M9 8h7M9 12h5"/></svg><span class="t">Card guide</span></button>
       <div class="snd">
         <button class="chipbtn icon" id="sndBtn" aria-haspopup="true" aria-expanded="false" aria-controls="sndMenu" aria-label="Sound settings"></button>
@@ -342,10 +374,17 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
     <button class="btn" id="startBtn">Start game</button>
   </div>
   <p class="note" id="lobbyNote"></p>
-  <div class="row"><button class="btn alt" id="leaveLobby">Leave lobby</button><button class="btn alt" id="backToGame" hidden>Back to table</button></div>
+  <div class="row"><button class="btn alt" id="lobbyChat" hidden>Chat and voice</button><button class="btn alt" id="leaveLobby">Leave lobby</button><button class="btn alt" id="backToGame" hidden>Back to table</button></div>
 </section>
 
 <div id="modal" hidden></div>
+<section class="chat" id="chatPanel" hidden aria-label="Table chat">
+  <div class="chat-head"><b>Table chat</b><button class="guide-close" id="chatClose" aria-label="Close chat">×</button></div>
+  <div class="voice-box" id="voiceBox"></div>
+  <ol class="chat-log" id="chatLog" aria-live="polite"></ol>
+  <div class="chat-quick" id="chatQuick"></div>
+  <form class="chat-form" id="chatForm"><input id="chatInput" maxlength="200" autocomplete="off" placeholder="Say something to the table" aria-label="Chat message"><button class="btn sm" type="submit">Send</button></form>
+</section>
 <div id="guide" hidden>
   <div class="guide-sheet" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
     <div class="guide-head"><h2 id="guideTitle">Card guide</h2><button class="guide-close" id="guideClose" aria-label="Close the card guide">×</button></div>
@@ -588,6 +627,7 @@ const Sfx = (() => {
     turn(mine) { if (mine) notes([784, 1175], .1, {dur: .35, vol: .12}); else tone(660, {dur: .2, vol: .06}); },
     steal() { noise({dur: .3, vol: .14, f: 2000, f2: 500, q: 1.5}); tone(620, {f2: 320, type: 'triangle', dur: .3, vol: .08}); },
     alert() { notes([988, 988], .12, {type: 'square', dur: .08, vol: .07}); },
+    chat() { notes([1046, 1568], .06, {dur: .12, vol: .05}); },
     win() { notes([523, 659, 784, 1047, 784, 1047, 1319], .13, {type: 'triangle', dur: .4, vol: .14}); },
   };
   return api;
@@ -2183,7 +2223,7 @@ const isUserOnline = uid => (!room && !standalone) || uid === me.id || onlineIds
 const standalone = !(window.claude && typeof window.claude.use === 'function');
 const P2P = (() => {
   const store = new Map(), subs = new Set(), conns = new Map(), uidOf = new Map();
-  let peer = null, hosting = false, hostConn = null, hostCode = null, onLost = null;
+  let peer = null, hosting = false, hostConn = null, hostCode = null, onLost = null, peerMapV = {}, onCallFn = null;
   const parentOf = p => p.split('/').slice(0, -1).join('/');
   const docSnap = p => ({id: p.split('/').pop(), exists: store.has(p), data: () => store.get(p)});
   const colSnap = c => { const docs = [...store.keys()].filter(k => parentOf(k) === c).map(docSnap); return {docs, size: docs.length, empty: !docs.length}; };
@@ -2213,12 +2253,14 @@ const P2P = (() => {
   // A guest may only write its own seat request and its own moves.
   function allowed(op, uid) {
     if (!op || typeof op.p !== 'string' || !uid || !['set', 'update', 'del'].includes(op.t)) return false;
-    return op.p === `lobbies/${hostCode}/members/${uid}` || op.p === `games/${hostCode}/intents/${uid}`;
+    return op.p === `lobbies/${hostCode}/members/${uid}` || op.p === `games/${hostCode}/intents/${uid}` || op.p === `lobbies/${hostCode}/chat/${uid}`;
   }
   function sharePresence() {
     onlineIds = new Set([me.id, ...uidOf.values()]);
-    broadcast({k: 'presence', ids: [...onlineIds]});
-    renderLobby();
+    peerMapV = {[me.id]: peer && peer.id};
+    for (const [pid, uid] of uidOf) if (uid) peerMapV[uid] = pid;
+    broadcast({k: 'presence', ids: [...onlineIds], peers: peerMapV});
+    renderLobby(); Voice.sync();
   }
   function loadLib() {
     if (window.Peer) return Promise.resolve();
@@ -2231,7 +2273,7 @@ const P2P = (() => {
   }
   const peerId = code => 'kitten-summon-arena-' + code;
   function reset() {
-    const p = peer; peer = null; hosting = false; hostConn = null; hostCode = null;
+    const p = peer; peer = null; hosting = false; hostConn = null; hostCode = null; peerMapV = {};
     conns.clear(); uidOf.clear(); store.clear();
     if (p) { try { p.destroy(); } catch (e) {} }
   }
@@ -2242,6 +2284,7 @@ const P2P = (() => {
       p.on('open', () => { hosting = true; hostCode = code; onlineIds = new Set([me.id]); res(); });
       p.on('error', e => { if (!hosting) rej(e); else console.warn('peer error', e.type); });
       p.on('disconnected', () => { if (peer === p) { try { p.reconnect(); } catch (e) {} } });
+      p.on('call', c => { if (onCallFn) onCallFn(c); });
       p.on('connection', c => {
         c.on('open', () => {
           conns.set(c.peer, c); uidOf.set(c.peer, String((c.metadata || {}).uid || ''));
@@ -2266,6 +2309,7 @@ const P2P = (() => {
       const fail = msg => { if (done) return; done = true; clearTimeout(timer); reset(); rej(new Error(msg)); };
       const timer = setTimeout(() => fail('Could not reach that lobby. Check the code and try again.'), 15000);
       const p = peer = new Peer();
+      p.on('call', c => { if (onCallFn) onCallFn(c); });
       p.on('error', e => {
         if (e.type === 'peer-unavailable') fail(`No lobby with code ${code.toUpperCase()} is open right now.`);
         else if (!done) fail('Could not connect (' + (e.type || 'network') + '). Try again.');
@@ -2279,7 +2323,7 @@ const P2P = (() => {
             if (!done) { done = true; clearTimeout(timer); res(); }
             for (const path of [...store.keys()]) notify(path);
           } else if (m.k === 'op' && m.op) apply(m.op);
-          else if (m.k === 'presence') { onlineIds = new Set(m.ids); renderLobby(); }
+          else if (m.k === 'presence') { onlineIds = new Set(m.ids); peerMapV = m.peers || {}; renderLobby(); Voice.sync(); }
         });
         c.on('close', () => { if (hostConn === c) { hostConn = null; if (onLost) onLost(); } });
       });
@@ -2303,8 +2347,176 @@ const P2P = (() => {
       return q;
     },
   };
-  return {db, host, join, leave: reset, onHostLost(fn) { onLost = fn; }};
+  return {db, host, join, leave: reset, onHostLost(fn) { onLost = fn; }, onCall(fn) { onCallFn = fn; },
+    peerMap: () => peerMapV, call: (pid, stream, meta) => peer ? peer.call(pid, stream, {metadata: meta}) : null};
 })();
+
+/* ======================= Table chat ======================= */
+const ICON_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>';
+const ICON_MIC_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M3 3l18 18"/></svg>';
+const ICON_MIC_SM = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:12px;height:12px"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+const Chat = {code: null, unsub: null, items: [], mine: [], open: false, unread: 0, lastSent: 0, loaded: false};
+const QUICK = ['GG', 'Nooo!', 'Nice one!', 'Hurry up!', 'Who has a Defuse?', 'Nope!', 'Sorry, not sorry'];
+const bubbles = {};
+const seatsNow = () => (view.snap && view.snap.seats) || (lobby.data && lobby.data.seats) || [];
+function nickOf(uid) { const s = seatsNow().find(x => x.uid === uid); return s ? s.nick : 'Player'; }
+function chatColor(uid) { const seats = seatsNow(), i = seats.findIndex(s => s.uid === uid); return i >= 0 ? (seats[i].color || SEAT_COLORS[i % SEAT_COLORS.length]) : '#a9a5d6'; }
+function chatStart(code) {
+  if (Chat.code === code || !db) return;
+  chatStop();
+  Chat.code = code; Chat.loaded = false;
+  Chat.unsub = db.collection(`lobbies/${code}/chat`).onSnapshot(s => {
+    const all = [];
+    for (const d of s.docs) {
+      const v = d.data() || {};
+      for (const it of (v.items || []).slice(-40)) all.push({uid: d.id, nick: String(v.nick || 'Player').slice(0, 16), text: String(it.text || '').slice(0, 200), at: +it.at || 0, id: String(it.id || '')});
+    }
+    all.sort((a, b) => a.at - b.at);
+    const known = new Set(Chat.items.map(m => m.uid + '|' + m.id));
+    const fresh = all.filter(m => !known.has(m.uid + '|' + m.id));
+    Chat.items = all.slice(-80);
+    if (Chat.loaded) for (const m of fresh) if (m.uid !== me.id) {
+      bubbles[m.uid] = {text: m.text, until: Date.now() + 5000};
+      if (!Chat.open) Chat.unread++;
+      Sfx.chat();
+    }
+    Chat.loaded = true;
+    renderChat();
+  }, () => {});
+  updateChatUI(); Voice.render();
+}
+function chatStop() {
+  if (Chat.unsub) Chat.unsub();
+  Object.assign(Chat, {code: null, unsub: null, items: [], mine: [], unread: 0, open: false});
+  $('#chatPanel').hidden = true; updateChatUI();
+}
+async function chatSend(text) {
+  text = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  if (!text || !Chat.code || !db) return;
+  const now = Date.now(); if (now - Chat.lastSent < 600) return; Chat.lastSent = now;
+  Chat.mine = [...Chat.mine, {id: now.toString(36) + rand(1e4), text, at: now}].slice(-20);
+  try { await db.doc(`lobbies/${Chat.code}/chat/${me.id}`).set({nick: nickOrDefault(), items: Chat.mine}); }
+  catch (e) { Chat.items.push({uid: '', nick: 'Chat', text: 'Your message could not be sent. You may only have view access to this page.', at: now, id: 'err' + now}); renderChat(); }
+}
+function renderChat() {
+  const log = $('#chatLog');
+  log.innerHTML = Chat.items.length
+    ? Chat.items.map(m => `<li class="${m.uid === me.id ? 'me' : ''}"><b style="color:${chatColor(m.uid)}">${esc(m.uid === me.id ? 'You' : m.nick)}</b>${esc(m.text)}</li>`).join('')
+    : '<li class="empty">No messages yet. Say hi to the table!</li>';
+  log.scrollTop = log.scrollHeight;
+  updateChatUI();
+}
+function updateChatUI() {
+  const online = !!Chat.code;
+  $('#chatBtn').hidden = !online; $('#lobbyChat').hidden = !online;
+  $('#chatBadge').hidden = !Chat.unread; $('#chatBadge').textContent = Chat.unread > 9 ? '9+' : String(Chat.unread);
+  $('#micBtn').hidden = !online || !Voice.supported();
+}
+function setChatOpen(open) {
+  Chat.open = open; $('#chatPanel').hidden = !open;
+  if (open) { Chat.unread = 0; renderChat(); Voice.render(); if (matchMedia('(pointer: fine)').matches) setTimeout(() => $('#chatInput').focus(), 50); }
+  updateChatUI();
+}
+$('#chatBtn').addEventListener('click', () => setChatOpen(!Chat.open));
+$('#lobbyChat').addEventListener('click', () => setChatOpen(true));
+$('#chatClose').addEventListener('click', () => setChatOpen(false));
+$('#chatForm').addEventListener('submit', e => { e.preventDefault(); chatSend($('#chatInput').value); $('#chatInput').value = ''; });
+$('#chatQuick').innerHTML = QUICK.map(q => `<button class="btn sm alt" type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('');
+$('#chatQuick').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (b) chatSend(b.dataset.q); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && Chat.open) setChatOpen(false); });
+
+/* ======================= Voice chat (website only: needs the mic and WebRTC) ======================= */
+// Each player with their mic on calls every other player directly; listeners answer receive-only.
+const Voice = (() => {
+  let stream = null, live = false, actx = null, selfMeter = null;
+  const out = new Map(), inc = new Map(), muted = new Set(), talking = {};
+  const supported = () => standalone && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && !!window.RTCPeerConnection;
+  function ac() {
+    if (!actx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; actx = new AC(); }
+    if (actx.state === 'suspended') actx.resume().catch(() => {});
+    return actx;
+  }
+  function meter(ms) { try { const c = ac(); if (!c) return null; const an = c.createAnalyser(); an.fftSize = 512; c.createMediaStreamSource(ms).connect(an); return {an, buf: new Uint8Array(an.fftSize)}; } catch (e) { return null; } }
+  function level(m) { if (!m) return 0; m.an.getByteTimeDomainData(m.buf); let s = 0; for (const v of m.buf) { const x = (v - 128) / 128; s += x * x; } return Math.sqrt(s / m.buf.length); }
+  function sync() {
+    if (!live || !stream) return;
+    for (const [uid, pid] of Object.entries(P2P.peerMap())) {
+      if (!pid || uid === me.id || out.has(pid)) continue;
+      const c = P2P.call(pid, stream, {uid: me.id}); if (!c) continue;
+      out.set(pid, c);
+      const drop = () => { if (out.get(pid) === c) out.delete(pid); };
+      c.on('close', drop); c.on('error', drop);
+    }
+  }
+  function onCall(call) {
+    const uid = String((call.metadata || {}).uid || '');
+    try { call.answer(); } catch (e) { return; }
+    call.on('stream', ms => {
+      const prev = inc.get(uid);
+      if (prev && prev.call !== call) { try { prev.call.close(); } catch (e) {} prev.audio.srcObject = null; }
+      const audio = new Audio(); audio.srcObject = ms; audio.autoplay = true; audio.playsInline = true; audio.muted = muted.has(uid);
+      audio.play().catch(() => {});
+      inc.set(uid, {call, audio, m: meter(ms)}); render();
+    });
+    const end = () => { const x = inc.get(uid); if (x && x.call === call) { x.audio.srcObject = null; inc.delete(uid); delete talking[uid]; render(); } };
+    call.on('close', end); call.on('error', end);
+  }
+  async function enable() {
+    if (!supported()) return false;
+    try { stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}}); }
+    catch (e) { setHint('Your microphone is blocked. Allow mic access in your browser to talk.'); return false; }
+    live = true; selfMeter = meter(stream); sync(); render(); return true;
+  }
+  function disable() {
+    live = false;
+    for (const c of out.values()) { try { c.close(); } catch (e) {} }
+    out.clear();
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null; selfMeter = null; delete talking[me.id];
+    render();
+  }
+  function stopAll() {
+    disable();
+    for (const x of inc.values()) { try { x.call.close(); } catch (e) {} x.audio.srcObject = null; }
+    inc.clear(); render();
+  }
+  function toggleMute(uid) {
+    if (muted.has(uid)) muted.delete(uid); else muted.add(uid);
+    const x = inc.get(uid); if (x) x.audio.muted = muted.has(uid);
+    render();
+  }
+  function unlockAudio() { ac(); for (const x of inc.values()) x.audio.play().catch(() => {}); }
+  function tick() {
+    for (const [uid, x] of inc) talking[uid] = !muted.has(uid) && level(x.m) > .035;
+    if (live) talking[me.id] = level(selfMeter) > .035;
+    $('#micBtn').classList.toggle('talk', !!talking[me.id]);
+    document.querySelectorAll('.vp[data-uid]').forEach(b => b.classList.toggle('talk', !!talking[b.dataset.uid]));
+  }
+  function render() {
+    const b = $('#micBtn');
+    b.setAttribute('aria-pressed', String(live)); b.innerHTML = live ? ICON_MIC : ICON_MIC_OFF;
+    b.title = live ? 'Your mic is on. Click to mute it.' : 'Turn your mic on'; b.setAttribute('aria-label', b.title);
+    const box = $('#voiceBox');
+    if (!supported()) {
+      box.innerHTML = standalone ? '<span>Voice chat is not supported in this browser.</span>' : '<span>Voice chat works on the website version, <b>kitten-summon-arena.vercel.app</b>. Text chat works everywhere.</span>';
+      return;
+    }
+    const people = [...inc.keys()];
+    box.innerHTML = `<div class="voice-row2"><button class="btn sm${live ? ' danger' : ''}" id="micToggle2" type="button">${live ? 'Mute my mic' : 'Turn my mic on'}</button><span>${people.length ? 'Live mics, tap to mute for you:' : 'No one else has their mic on.'}</span></div>` +
+      (people.length ? `<div class="voice-row2">${people.map(uid => `<button type="button" class="vp" data-uid="${esc(uid)}" aria-pressed="${muted.has(uid)}">${ICON_MIC_SM}${esc(nickOf(uid))}</button>`).join('')}</div>` : '');
+    if (lobby.data) renderLobby();
+  }
+  return {supported, enable, disable, stopAll, onCall, sync, tick, render, toggleMute, unlockAudio,
+    isLive: uid => !!uid && (uid === me.id ? live : inc.has(uid)), speaking: uid => !!uid && !!talking[uid], get live() { return live; }};
+})();
+P2P.onCall(c => Voice.onCall(c));
+$('#micBtn').addEventListener('click', () => { Sfx.unlock(); Voice.unlockAudio(); if (Voice.live) Voice.disable(); else Voice.enable(); });
+$('#voiceBox').addEventListener('click', e => {
+  if (e.target.closest('#micToggle2')) { Voice.unlockAudio(); if (Voice.live) Voice.disable(); else Voice.enable(); return; }
+  const b = e.target.closest('.vp[data-uid]'); if (b) Voice.toggleMute(b.dataset.uid);
+});
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => Voice.unlockAudio(), {passive: true}));
+setInterval(() => Voice.tick(), 120);
 
 /* ======================= Lobby screens ======================= */
 let lobbies = [];
@@ -2387,7 +2599,7 @@ async function joinLobby(code) {
 }
 function enterLobby(code) {
   stopLobbySubs();
-  lobby.code = code; lobby.data = null; setPresence();
+  lobby.code = code; lobby.data = null; setPresence(); chatStart(code);
   $('#lobbyCode').textContent = code.toUpperCase();
   $('#lobbyNote').textContent = '';
   showScreen('lobby');
@@ -2435,7 +2647,7 @@ function renderLobby() {
   $('#lobbySub').textContent = L.status === 'playing' ? 'A game is running at this table.' : lobby.hosting ? 'You are the host. Add bots or wait for friends, then start.' : seated ? 'You have a seat. Waiting for the host to start.' : 'Watching. Seats are full or you have view-only access.';
   $('#seatList').innerHTML = L.seats.map((s, i) => {
     const on = s.kind === 'bot' || isUserOnline(s.uid);
-    const tags = [s.uid === L.host ? 'Host' : '', s.uid === me.id ? 'You' : '', s.kind === 'bot' ? 'Bot' : on ? '' : 'Away'].filter(Boolean);
+    const tags = [s.uid === L.host ? 'Host' : '', s.uid === me.id ? 'You' : '', s.kind === 'bot' ? 'Bot' : on ? '' : 'Away', Voice.isLive(s.uid) ? 'Mic on' : ''].filter(Boolean);
     const canRemove = lobby.hosting && L.status !== 'playing' && s.uid !== me.id;
     const lk = cleanLook(s.look), accName = ACCS.find(a => a[0] === lk.acc)[1];
     return `<li><span class="dot" style="--c:${lk.fur};box-shadow:0 0 0 3px ${SEAT_COLORS[i]}"></span><div class="grow"><b>${esc(s.nick)}</b><span>Seat ${i + 1}${lk.acc !== 'none' ? ` · ${accName}` : ''}</span></div>${tags.map(t => `<span class="pill${t === 'You' || t === 'Host' ? ' on' : ''}">${t}</span>`).join('')}${canRemove ? `<button class="btn sm alt" data-rm="${i}">Remove</button>` : ''}</li>`;
@@ -2474,7 +2686,7 @@ $('#startBtn').addEventListener('click', hostStart);
 
 async function exitToHome(msg) {
   const code = lobby.code, wasHost = lobby.hosting;
-  stopEngine(); stopLobbySubs();
+  stopEngine(); stopLobbySubs(); chatStop(); Voice.stopAll();
   lobby.code = null; lobby.data = null; lobby.hosting = false;
   setPresence(); closeModal(); clearTable(); view.code = null; view.snap = null;
   setStage(me.stage);
@@ -3208,7 +3420,8 @@ function setupGame(snap) {
     scene.add(g);
     const fan = new THREE.Group(); scene.add(fan);
     const lbl = document.createElement('div'); lbl.className = 'lbl'; $('#labels').appendChild(lbl);
-    view.seatObjs[s] = {group: g, ring, avatar: av, fan, dir: new V3(0, 0, 1), pos, lbl, ly: 2.45, scale: 1};
+    const bub = document.createElement('div'); bub.className = 'bubble'; bub.hidden = true; $('#labels').appendChild(bub);
+    view.seatObjs[s] = {group: g, ring, avatar: av, fan, dir: new V3(0, 0, 1), pos, lbl, bub, ly: 2.45, scale: 1};
   });
   resize();
   const first = snap.events[0];
@@ -3832,10 +4045,18 @@ function renderLabels() {
     }
     placed.push({x: cx, y: top, w: lw});
     o.lbl.style.transform = `translate(${Math.round(cx - lw / 2)}px,${Math.round(top)}px)`;
+    const uid = sn.seats[s].uid, say = uid && bubbles[uid] && bubbles[uid].until > Date.now() ? bubbles[uid].text : '';
+    if (say) {
+      if (o.bub.textContent !== say) o.bub.textContent = say;
+      o.bub.hidden = false;
+      const bw = o.bub.offsetWidth, bx = Math.min(W - 6 - bw / 2, Math.max(6 + bw / 2, cx));
+      o.bub.style.transform = `translate(${Math.round(bx - bw / 2)}px,${Math.round(top - o.bub.offsetHeight - 8)}px)`;
+    } else o.bub.hidden = true;
+    o.lbl.classList.toggle('speaking', Voice.speaking(uid));
     const st = sn.seats[s], act = sn.status === 'playing' && M.cur === s && M.alive[s];
     const away = st.kind === 'human' && sn.online && !isUserOnline(st.uid);
     const count = M.alive[s] ? M.hands[s].length + ' cards' : M.hands[s].length ? `Ghost · ${M.hands[s].length} cards` : 'Exploded';
-    const html = `<b>${esc(st.nick)}</b>${st.kind === 'bot' ? '<i>BOT</i>' : away ? '<i>AWAY</i>' : ''}<span>${count}</span>${act && M.tl > 1 ? `<em>${M.tl} turns</em>` : ''}${seatBadges(s, M)}`;
+    const html = `<b>${esc(st.nick)}</b>${Voice.isLive(st.uid) ? `<span class="micdot">${ICON_MIC_SM}</span>` : ''}${st.kind === 'bot' ? '<i>BOT</i>' : away ? '<i>AWAY</i>' : ''}<span>${count}</span>${act && M.tl > 1 ? `<em>${M.tl} turns</em>` : ''}${seatBadges(s, M)}`;
     if (o.lbl._h !== html) { o.lbl.innerHTML = html; o.lbl._h = html; }
     o.lbl.classList.toggle('active', !!act); o.lbl.classList.toggle('out', !M.alive[s]);
     o.ring.material.opacity = act ? .55 + Math.sin(clock.elapsedTime * 5) * .3 : 0;

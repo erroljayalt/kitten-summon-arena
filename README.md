@@ -14,6 +14,7 @@ The whole game is a single file, `index.html`. Open it in a browser to play.
 - Seven arenas: outer space, beach, living room, bar, pyramids, neon rooftop, and volcano.
 - Synthesized sound effects and music, with a sound menu for sound, music and the announcer.
 - MC Whiskers, a roasting announcer with over 400 lines.
+- Table chat with quick replies and speech bubbles over players, plus open-mic voice chat on the website (each player can turn their mic on and mute others for themselves).
 - An in-game card guide that explains every card and combo.
 - Works on phones: compact top bar, adaptive camera and seat layout, labels that stay on screen.
 
