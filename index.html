@@ -2514,7 +2514,8 @@ function comboOk(types) {
 function newGameState(seats, code, online, mode = 'classic') {
   const counts = mode === 'party' ? PARTY : COUNTS, N = seats.length;
   const base = Object.values(counts).reduce((a, b) => a + b, 0);
-  const mult = Math.max(1, Math.ceil((N * 7 + 35) / base));   // bigger tables get extra copies of every card
+  // Classic always uses the original 56-card deck; only big Party tables get extra copies of every card.
+  const mult = mode === 'party' ? Math.max(1, Math.ceil((N * 7 + 20) / base)) : 1;
   const pool = []; for (const [t, n] of Object.entries(counts)) for (let i = 0; i < n * mult; i++) pool.push(t);
   shuffleArr(pool);
   let uid = 0;
