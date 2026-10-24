@@ -124,6 +124,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .panel h1{font-family:var(--f-display);font-weight:400;font-size:1.6rem;margin:0 0 4px;text-wrap:balance}
 .panel h2{font-family:var(--f-display);font-weight:400;font-size:1rem;margin:20px 0 8px;letter-spacing:.03em}
 .panel p{margin:0;color:var(--muted);line-height:1.45}
+@media (min-width:980px){#home{width:min(1120px,calc(100% - 32px));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}#home .home-col+.home-col{border-left:1px solid var(--line);padding-left:28px}#home h2.first{margin-top:4px}}
 .field{display:grid;gap:6px;margin-top:16px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
 .field input{font:inherit;font-size:16px;text-transform:none;letter-spacing:0;color:var(--fg);background:#0e0b22;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
@@ -331,6 +332,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 </div>
 
 <section class="panel" id="home">
+<div class="home-col">
   <h1>Kitten <em>Summon</em> Arena</h1>
   <p>Every card played is summoned as a hologram in the middle of the table. Open a lobby, let friends join, and fill empty seats with bots.</p>
   <label class="field" for="nick">Your player name
@@ -347,7 +349,9 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
       <button class="chipsel" id="randomLook">Randomize</button>
     </div>
   </div>
-  <h2>Arena</h2>
+</div>
+<div class="home-col">
+  <h2 class="first">Arena</h2>
   <div class="swatches" id="stagePick"></div>
   <h2>Deck</h2>
   <div class="swatches" id="deckPick"></div>
@@ -375,6 +379,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
     <li><b>Cat cards:</b> a pair steals a random card; three of a kind names the card you want.</li>
   </ul>
   <div class="row"><button class="btn alt guide-open">Open the card guide</button></div>
+</div>
 </section>
 
 <section class="panel" id="lobbyPanel" hidden>
