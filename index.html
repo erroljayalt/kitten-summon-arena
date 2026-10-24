@@ -46,6 +46,11 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .chip,.chipbtn{display:inline-flex;align-items:center;gap:6px}
 .chip svg,.chipbtn svg{width:14px;height:14px;flex:none}
 .chip.kit svg{color:#ff9a4a}
+#stats{position:absolute;left:50%;top:calc(max(12px,env(safe-area-inset-top,0px)) + 44px);transform:translateX(-50%);display:flex;gap:10px;width:max-content;max-width:calc(100% - 24px)}
+#stats .chip{font-size:15px;padding:8px 18px;gap:9px;background:rgba(20,16,48,.9);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#stats .chip svg{width:20px;height:20px}
+#stats .chip b{font-size:20px;line-height:1}
+#stats .chip.kit{border-color:rgba(255,154,74,.55)}
 .chip.turn svg{color:var(--holo)}
 .chipbtn:hover{border-color:var(--holo)}
 .chipbtn.guide{background:#ffcf3a;border-color:#ffcf3a;color:#1a1426;font-weight:700}
@@ -108,13 +113,13 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 #tag:empty{display:none}
 #banner{position:absolute;left:50%;top:18%;transform:translateX(-50%);font-family:var(--f-display);font-size:clamp(1.05rem,3.2vw,1.7rem);text-align:center;opacity:0;text-shadow:0 2px 0 #000,0 0 18px rgba(0,0,0,.8);width:max-content;max-width:calc(100% - 32px)}
 #banner.show{animation:banner 2.2s ease-out both}
-#ann{position:absolute;left:50%;top:calc(max(12px,env(safe-area-inset-top,0px)) + 52px);transform:translateX(-50%);width:max-content;max-width:min(500px,calc(100% - 32px));box-sizing:border-box;
+#ann{position:absolute;left:50%;top:calc(max(12px,env(safe-area-inset-top,0px)) + 118px);transform:translateX(-50%);width:max-content;max-width:min(500px,calc(100% - 32px));box-sizing:border-box;
   display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid #ff9a4a;border-radius:14px;padding:8px 12px;box-shadow:0 10px 30px rgba(0,0,0,.5);
   opacity:0;translate:0 -8px;transition:opacity .25s,translate .25s;z-index:12}
 #ann.show{opacity:1;translate:0 0}
 #ann .mic{flex:none;font-family:var(--f-display);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#0b0918;background:#ff9a4a;border-radius:6px;padding:3px 7px;margin-top:2px}
 #ann p{margin:0;font-weight:600;line-height:1.35;text-wrap:pretty}
-@media (max-width:700px){#ann{top:calc(max(12px,env(safe-area-inset-top,0px)) + 104px)}}
+@media (max-width:700px){#ann{top:calc(max(12px,env(safe-area-inset-top,0px)) + 132px)}}
 #bar{position:absolute;left:50%;bottom:calc(var(--hand-h) + 12px);transform:translateX(-50%);pointer-events:auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px 10px;width:max-content;max-width:calc(100% - 32px);box-sizing:border-box}
 #bar.mine{border-color:var(--holo);box-shadow:0 0 24px -8px var(--holo)}
 #hint{font-size:13px;color:var(--muted);max-width:330px;text-wrap:balance}
@@ -275,8 +280,13 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
   .chip,.chipbtn{padding:5px 7px;font-size:11px;gap:4px;letter-spacing:.03em}
   .chipbtn.icon svg:last-child{display:none}
   .chips{gap:3px}
-  .chip.turn{margin-right:auto;min-width:0;overflow:hidden}
-  #turnChip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #stats{top:calc(max(12px,env(safe-area-inset-top,0px)) + 62px);gap:6px}
+  #stats .chip{font-size:12px;padding:6px 11px;gap:6px;letter-spacing:.05em}
+  #stats .chip .t{display:inline}
+  #stats .chip svg{width:16px;height:16px}
+  #stats .chip b{font-size:16px}
+  .chip.turn{min-width:0;overflow:hidden}
+  #turnChip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34vw}
   .lbl{font-size:11px;padding:3px 7px;gap:5px;border-radius:8px}
   .lbl span{font-size:10.5px}
   .lbl i:not(.mk){display:none}
@@ -290,7 +300,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
   #react{bottom:calc(var(--hand-h) + 104px);width:calc(100% - 20px)}
   .timer{width:100%}
   #banner{top:17%}
-  #ann{top:calc(max(12px,env(safe-area-inset-top,0px)) + 64px);padding:6px 10px}
+  #ann{top:calc(max(12px,env(safe-area-inset-top,0px)) + 108px);padding:6px 10px}
   #ann p{font-size:13px}
   #fx{font-size:1.4rem}
   #tag{font-size:12px}
@@ -303,10 +313,12 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 <div class="ui">
   <div class="top" id="hud" hidden>
     <div class="brand"><h1>Kitten <em>Summon</em> Arena</h1><ul id="log"></ul></div>
-    <div class="chips">
+    <div id="stats">
       <span class="chip turn"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><ellipse cx="12" cy="16" rx="5" ry="4"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="9.5" cy="5.8" r="2.2"/><circle cx="14.5" cy="5.8" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/></g></svg><span id="turnChip">Dealing</span></span>
       <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="12" height="16" rx="2"/><path d="M5 7v12a2 2 0 0 0 2 2h9"/></svg><span class="t">Deck</span> <b id="deckCount">0</b></span>
-      <span class="chip kit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="14" r="7" fill="currentColor" stroke="none"/><path d="M14 9l3-3M18 2.5v2M21.5 6h-2M20.5 3.5l-1.2 1.2"/></svg><span class="t">Kittens</span> <b id="kitCount">0</b></span>
+      <span class="chip kit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="14" r="7" fill="currentColor" stroke="none"/><path d="M14 9l3-3M18 2.5v2M21.5 6h-2M20.5 3.5l-1.2 1.2"/></svg><span class="t">Bombs</span> <b id="kitCount">0</b></span>
+    </div>
+    <div class="chips">
       <span class="chip fxchip" id="dirChip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5M20 12a8 8 0 0 1-14 5"/><path d="M18 3v4h-4M6 21v-4h4"/></svg><span class="t">Reversed</span></span>
       <span class="chip fxchip sun" id="sunChip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span class="t">Sun Cat on shrine</span></span>
       <span class="chip fxchip doom" id="doomChip" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c2 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 3 3 5 1-3 1-6 1-9z"/></svg><span class="t">Cat-astrophe</span></span>
@@ -3822,7 +3834,7 @@ function toScreen(v) { const p = v.clone().project(camera); return [(p.x + 1) / 
 function place(el, v, dx = '-50%', dy = '-100%') { const [x, y] = toScreen(v); el.style.transform = `translate(${x}px,${y}px) translate(${dx},${dy})`; }
 function renderLabels() {
   if (view.screen !== 'game' || !view.snap || !view.mirror) return;
-  const sn = view.snap, M = view.mirror, placed = [], W = innerWidth;
+  const sn = view.snap, M = view.mirror, placed = [], W = innerWidth, sr = $('#stats').getBoundingClientRect();
   view.seatObjs.forEach((o, s) => {
     if (!o) return;
     const [x, y] = toScreen(o.pos.clone().setY(o.ly)), lw = o.lbl.offsetWidth, lh = o.lbl.offsetHeight;
@@ -3832,6 +3844,8 @@ function renderLabels() {
       const hit = placed.find(r => Math.abs(r.x - cx) < (r.w + lw) / 2 + 3 && Math.abs(r.y - top) < lh + 2);
       if (!hit) break; top = hit.y - lh - 3;
     }
+    // Keep name tags out from under the Turn / Deck / Bombs row.
+    if (sr.width && top < sr.bottom + 4 && cx + lw / 2 > sr.left - 4 && cx - lw / 2 < sr.right + 4) top = sr.bottom + 4;
     placed.push({x: cx, y: top, w: lw});
     o.lbl.style.transform = `translate(${Math.round(cx - lw / 2)}px,${Math.round(top)}px)`;
     const uid = sn.seats[s].uid, say = uid && bubbles[uid] && bubbles[uid].until > Date.now() ? bubbles[uid].text : '';
@@ -3985,7 +3999,7 @@ const GUIDE = {
   future: {use: 'Select it and press <b>Play</b>. You see the top 3 cards of the draw pile. Only you see them; everyone else just sees the hologram.', tip: 'Plan your turn: draw if it is safe, or Skip, Attack or Shuffle if a kitten is coming.'},
   nope: {use: 'You cannot play it alone on your turn. When anyone plays an action or combo, a red bar with a <b>Nope!</b> button appears for about 3 seconds. Tap it (or the glowing Nope card) to cancel that action.', tip: 'You can Nope a Nope to bring the action back. Nope cannot stop a Defuse or an Exploding Kitten.'},
   defuse: {use: 'You never play it by hand. When you draw an Exploding Kitten, the game asks you to play your Defuse, then you <b>choose where to hide</b> the kitten in the draw pile.', tip: 'Everyone starts with one. Hide the kitten near the top to trap the next player.'},
-  boom: {use: 'When you draw one, you must play a Defuse. If you have none, you <b>explode</b> and are out. The last cat standing wins.', tip: 'Watch the Kittens counter in the top bar. As the deck gets thinner, every draw gets riskier.'},
+  boom: {use: 'When you draw one, you must play a Defuse. If you have none, you <b>explode</b> and are out. The last cat standing wins.', tip: 'Watch the Bombs counter at the top of the screen. As the deck gets thinner, every draw gets riskier.'},
   targeted: {use: 'Play it, then <b>pick any player</b>. Your turn ends without drawing and that player takes 2 turns. Play continues from them.', tip: 'Skip over the player next to you and hit whoever is closest to winning.'},
   personal: {use: 'Play it and you must take <b>3 turns in a row</b>, starting with the current one.', tip: 'Useful when you know the next few cards are safe, or just want to dig for a Defuse.'},
   superskip: {use: 'Ends your turn without drawing, <b>including every extra turn</b> you owe from Attacks.', tip: 'The perfect answer to a big stack of Attack turns.'},
