@@ -363,9 +363,6 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
     <button class="btn alt ann-toggle" aria-pressed="false">Announcer on</button>
     <button class="btn alt mute-toggle" aria-pressed="false">Sound on</button>
   </div>
-  <div class="field">Announcer voice
-    <div class="voice-row"><select id="voicePick" aria-label="Announcer voice"></select><button class="btn alt sm" id="voiceTest">Test voice</button></div>
-  </div>
   <p class="note" id="netNote">Connecting to the arena…</p>
   <h2 id="lobbiesTitle">Open lobbies</h2>
   <div class="voice-row" id="joinRow" hidden><input id="joinCode" maxlength="5" autocomplete="off" spellcheck="false" placeholder="Lobby code, e.g. K7Q2M" aria-label="Lobby code"><button class="btn" id="joinBtn">Join</button></div>
@@ -668,706 +665,92 @@ const Sfx = (() => {
 const Announcer = (() => {
   let on = true;
   try { on = localStorage.getItem('ksa-ann') !== '0'; } catch (e) {}
-  const synth = window.speechSynthesis || null;
-  let voice = null, voiceList = [], hideT = 0, busyUntil = 0, chosen = '';
+  // Recorded lines (ElevenLabs, voice "Jessica"): audio/announcer/<key>_<index>.mp3. Text doubles as the caption.
+  const V = {"start": ["[excited] Welcome to the Kitten Summon Arena! Grab your Defuse, hug your loved ones, and let us play!", "The kittens are in the deck. Somebody here is going home in pieces tonight.", "Cards are dealt, bombs are hidden, and I am already judging all of you.", "Alright, my little disasters. Let us see who explodes first!", "Fresh deck, fresh victims! Let us get this party started!", "Remember, it is just a game. A game where you explode."], "roulette": ["The wheel has spoken! Good luck, you will need it.", "And the lucky victim goes first. Lead us into disaster!", "You go first! No pressure. Okay, a lot of pressure.", "Spin, spin, spin! And you are up first!", "Destiny has chosen you. Destiny has terrible taste."], "turn": ["Your turn. Try not to embarrass yourself.", "Okay, your move. The whole table is watching.", "Go on, sweetie. The deck will not bite. Probably.", "Your turn! I believe in you. Mostly.", "Tick tock! Show us that big brain.", "Your move. Make it count, or at least make it funny.", "Your turn, superstar. Do not blow it. Literally.", "All eyes on you, darling.", "Go ahead. Draw. I dare you.", "Your turn! Somebody is sweating, and it is you."], "turnMulti": ["Multiple turns! Oh, that is going to hurt.", "More than one turn? Somebody really does not like you.", "Stack those turns, baby! This is my favorite part."], "attack": ["[laughs] Attack! Next player, enjoy your two turns.", "Ooh, an Attack! That was personal.", "Attack! Passing the problem along like a true professional.", "Brutal! Somebody just became the target.", "Attack! Somebody is having a terrible day.", "Two turns for you! Thank the nice attacker."], "skip": ["A Skip. The classic coward move. I respect it.", "Skip! Running away has never looked so stylish.", "Skipping your turn? Nobody saw that. Except everybody.", "Skip! Not today, deck. Not today.", "Skipped! Cowardly, efficient, perfect."], "favor": ["A Favor! Hand it over, and smile while you do it.", "Favor! Nothing says friendship like forced generosity.", "Give them a card, and make it a good one!", "Favor! Pay up, buttercup."], "shuffle": ["Shuffle! Because the truth was too scary.", "Mix it up! Chaos is my love language.", "Shuffling the deck. Nobody knows anything anymore.", "Shuffle! Whatever you saw is now a lie."], "future": ["Peeking at the future! Do not let that face give it away.", "See the Future! Oh, that face says a lot.", "Fortune telling time! Was it good news? It was not, was it?", "Future seen! Your poker face needs work.", "Ooh, sneaky peek! Was it a kitten? Do not tell me."], "pair": ["A pair of cats! Time for a little robbery.", "Two of a kind! Steal something juicy.", "Cat pair! Somebody's hand just got lighter.", "A pair! Nice cats, shame about your morals.", "Pair played! Hands off, hands over."], "triple": ["Three of a kind! Name that card, you thief.", "A triple! That is premium-grade stealing.", "Three cats! Pick exactly what you want. Greedy, I love it!", "Three of a kind! Somebody is going shopping."], "nope": ["[excited] Nope! Denied!", "Nope! Not today, sweetheart.", "Nope! Shut down in front of everyone.", "Nope! The audacity! I love it.", "Nope! Sit down, please.", "Nope! That was rude. I loved it."], "nopeNope": ["A Nope on a Nope! This table is wild!", "Nope-ception! Somebody grab the popcorn.", "Nope, nope, nope! Make up your minds!"], "stands": ["No Nopes. It goes through!", "Nobody stopped it. That one stands.", "And it happens! Nobody had the guts."], "boom": ["[gasps] Exploding Kitten! Oh no, oh no, oh no!", "That is a bomb! Somebody call the fire department!", "Kitten in the hand! Defuse, or say goodbye!", "Oh, that is not a good card. That is a very bad card.", "Ka-boom incoming! Tell me you have a Defuse.", "The kitten! It is the kitten! Everybody stay calm!", "Uh oh. That card is ticking."], "defuse": ["Defused! Smooth, very smooth.", "Phew! That Defuse did all the work.", "Defused! Your heart rate is still at two hundred, right?", "Saved by the Defuse! Do not get comfortable.", "Defused! Somebody give that cat a raise.", "Crisis averted! For now."], "hide": ["Hiding the kitten back in the deck. Sneaky!", "Where did it go? Only one person knows.", "Kitten tucked away. Somebody is in trouble now.", "Back in the deck it goes. Sleep tight, little bomb."], "explode": ["[laughs] Kaboom! And just like that, you are gone!", "Boom! That is going to leave a mark.", "Exploded! Rest in pieces, darling.", "Kaboom! Thank you for playing, please exit to the left.", "And they are out! Somebody sweep up the fur.", "Boom! That was beautiful. Tragic, but beautiful.", "Kaboom! Well, that is one way to leave the party.", "Gone! Do not worry, we will tell stories about you.", "Boom! I warned you. Okay, I did not, but still."], "gave": ["Handing it over. What a generous little sweetheart.", "A gift! I bet it was the worst card they had.", "Card given. I can feel the resentment from here."], "stolen": ["Stolen! Check your pockets, everybody.", "Yoink! That card has a new home.", "Robbed in broad daylight!", "Snatched! Like candy from a kitten.", "Mine now! Sorry, not sorry."], "miss": ["They did not have it! Whoops.", "Swing and a miss! Awkward.", "Nothing! That was a lot of cats for nothing."], "safeDraw": ["Safe! For now.", "Just a regular card. Boring, but alive.", "Phew! The deck was kind this time.", "Safe draw. Do not get used to it.", "Nothing scary. Lucky you.", "Safe! The kittens are still waiting, though.", "A normal card! What a relief."], "safeLow": ["The deck is getting thin. I can smell the danger.", "Not many cards left, and the kittens are still in there!", "Low deck! Every draw is a gamble now."], "bigHand": ["Look at that hand! Are you building a library?", "So many cards! Hoarding is not a strategy, honey."], "tinyHand": ["One card left. That is not a hand, that is a prayer.", "Running on empty! Good luck with that."], "lastTwo": ["Only two players left! This is the final showdown!", "And then there were two! Who wants it more?"], "idle": ["Hello? Anybody home? It is your turn!", "I could knit a sweater in the time you are taking.", "We are waiting! The kittens are getting bored.", "Take your time. Not really, please hurry up.", "Did you fall asleep? Wake up, it is your turn!", "The suspense is killing me. Please play something."], "win": ["[excited] We have a winner! Last cat standing!", "Victory! Everybody else, go practice.", "And that is the game! What a champion!", "Winner winner, kitten dinner!", "The champion of chaos! Take a bow!", "Last one standing! Everybody else, that was embarrassing."], "generic": ["Bold choice. Probably wrong, but bold.", "Ooh, interesting move. Let us see if it works.", "Did not see that coming, and neither did you.", "That card is doing something. I think.", "Wow! The strategy is strategizing.", "Okay, okay! Somebody came to play.", "Look at that! A real power move.", "Hmm. I have questions, but go on.", "Big card energy! I like it.", "Fancy! Somebody read the card guide.", "Well, that changes things!", "Interesting. Very interesting."], "revive": ["Back from the dead! I did not sign up for zombies."], "catastrophe": ["Cat-astrophe! Everybody panic!"], "shadow": ["The Shadow Cat! Oh, this is spooky."], "mic": ["MC Whiskers is back on the mic. Try to play well this time."], "targeted": ["Targeted Attack! Somebody has a grudge."], "personal": ["Personal Attack? Attacking yourself? Bold strategy."], "superskip": ["Super Skip! Skipping everything, like a boss."], "reverse": ["Reverse! Everybody turn around!"], "bury": ["Bury! Hide that card and never speak of it."], "bombstack": ["A Bomb Stack! Who builds a bomb tower? This person!"], "alter": ["Rearranging the future! Somebody is playing god."], "clone": ["Clone! Copy and paste, my favorite strategy."], "howl": ["Howl! Awoo! Show me those cards!"], "suncat": ["Sun Cat! Somebody is glowing today."], "blindFail": ["You picked wrong! Ouch."], "implodeHide": ["Collapsing Kitten back in the deck, face up! Everybody count!"]};
   const lastLine = {};
-  try { chosen = localStorage.getItem('ksa-voice') || ''; } catch (e) {}
-  // Rank installed voices: natural/neural female English voices first, male voices last.
-  const FEMALE = /aria|jenny|ava|emma|michelle|sonia|libby|natasha|clara|sara|nancy|jane|samantha|zira|karen|moira|tessa|fiona|victoria|serena|allison|susan|female|google us english|salli|joanna|kendra|kimberly|ivy|hazel|catherine|heera|ana\b/i;
-  const MALE = /guy|davis|tony|jason|eric|ryan|daniel|david|george|arthur|alex|fred|mark|\bmale|james|thomas|oliver|rishi|christopher|roger|steffan|brian/i;
-  function score(v) {
-    if (!/^en/i.test(v.lang)) return -1;
-    const n = v.name; let s = 0;
-    if (/natural|neural|online/i.test(n)) s += 50;
-    if (FEMALE.test(n)) s += 30;
-    if (MALE.test(n.replace(/female/ig, '')) && !FEMALE.test(n)) s -= 60;
-    if (/google/i.test(n)) s += 12;
-    if (/en[-_]US/i.test(v.lang)) s += 4;
-    return s;
-  }
-  function pickVoice() {
-    if (!synth) return;
-    voiceList = synth.getVoices().filter(v => score(v) >= 0).sort((a, b) => score(b) - score(a));
-    voice = voiceList.find(v => v.name === chosen) || voiceList[0] || null;
-    renderVoices();
-  }
-  function renderVoices() {
-    const sel = $('#voicePick'); if (!sel) return;
-    if (!voiceList.length) { sel.innerHTML = '<option>Browser default voice</option>'; sel.disabled = true; return; }
-    sel.disabled = false;
-    sel.innerHTML = voiceList.map((v, i) => `<option value="${esc(v.name)}"${voice && v.name === voice.name ? ' selected' : ''}>${esc(v.name.replace(/^Microsoft /, '').replace(/ - .*$/, ''))}${i === 0 ? ' (recommended)' : ''}</option>`).join('');
-  }
-  if (synth) { pickVoice(); try { synth.onvoiceschanged = pickVoice; } catch (e) {} }
-  const MOOD_OF = {bombstack: 'hype', catastrophe: 'hype', revive: 'hype', howl: 'hype', implodeHide: 'hype', shadow: 'hype', start: 'hype', boom: 'hype', explode: 'hype', win: 'hype', nope: 'hype', nopeNope: 'hype', lastTwo: 'hype', attack: 'hype', idle: 'chill', safeLow: 'chill', safeDraw: 'chill', turn: 'chill'};
-  const MOODS = {hype: [1.12, 1.2], roast: [1.06, 1.12], chill: [1.0, 1.05]};
-  const HYPE = ['Ohhh! ', 'Whoa! ', 'Yikes! ', 'Oh my! ', 'Ooh! '];
-  function speak(text, mood) {
-    const [rate, pitch] = MOODS[mood] || MOODS.roast;
-    const parts = text.match(/[^.!?]+[.!?]*/g) || [text];
-    parts.forEach((p, i) => {
-      const u = new SpeechSynthesisUtterance(p.trim());
-      if (voice) { u.voice = voice; u.lang = voice.lang; }
-      const excited = /!/.test(p);
-      u.rate = rate + (excited ? .06 : 0) + (Math.random() - .5) * .07;
-      u.pitch = Math.min(1.4, pitch + (excited ? .08 : 0) + (Math.random() - .5) * .08);
-      u.volume = 1;
-      if (i === 0) u.onstart = () => Sfx.duck(true);
-      if (i === parts.length - 1) u.onend = u.onerror = () => Sfx.duck(false);
-      synth.speak(u);
-    });
-  }
-  const L = {
-    start: [
-      'Welcome to Kitten Summon Arena! {n} players, {k} exploding kittens, and zero brain cells between you.',
-      'Ladies, gentlemen and doomed felines, let the explosions begin!',
-      'Cards are dealt. Somebody here is about to make a terrible decision. I can feel it.',
-      'Welcome back to the only table where losing comes with fireworks!',
-      '{n} cats walk into an arena. {k} kittens are waiting. This is not the start of a joke, it is a tragedy.',
-      'Shuffle up, cats! Tonight we find out who has strategy and who has vibes.',
-      'Everyone got a Defuse. Hold it like your rent money, because you will need it.',
-      'I have seen this table play before. I brought popcorn and a fire extinguisher.',
-      'Paws on the table, tails in the air, and absolutely no crying. Okay, a little crying.',
-      'Let us begin! May the odds be ever in your favor, and the kittens be ever in somebody else\'s hand.',
-      'Fresh deck, fresh cats, fresh disasters incoming.',
-      'Welcome, contestants! Reminder: the bomb-shaped cards are bad. I say this every game. Nobody listens.',
-      'Grab your Defuse, hug your loved ones, and let us play!',
-      'Tonight\'s forecast: 100 percent chance of explosions.',
-      'Welcome! The kittens are hidden, the stakes are high, and the strategy is low.',
-    ],
-    turnMulti: [
-      '{P} has to take {t} turns. Thoughts and prayers.',
-      '{t} turns for {P}. That is not a turn, that is a sentence.',
-      '{P}, enjoy your {t} turns. Pace yourself, champ.',
-      '{P} is on a {t}-turn shift with no breaks and no hazard pay.',
-      '{t} turns! {P}, this is what we call a bad day at the office.',
-      'Somebody pass {P} a snack. They will be here for {t} turns.',
-      '{P} owes {t} turns. The deck is licking its lips.',
-      'Double trouble for {P}! Or triple. I lost count, honestly.',
-      '{P} got attacked and now has {t} turns of pure anxiety.',
-      '{t} turns, {P}. Draw slowly. Breathe. Or do not, I am not your doctor.',
-      '{P} is stuck with {t} turns. The deck sends its regards.',
-      '{t} turns for {P}? Somebody start a fundraiser.',
-      '{P} got handed {t} turns and a lot of regret.',
-    ],
-    turn: [
-      '{P}, you are up. Try not to embarrass yourself.',
-      'All eyes on {P}. Unfortunately.',
-      'It is {P}\'s turn. Somebody hold their paw.',
-      '{P}, the deck is waiting. So is your doom.',
-      '{P} steps up with the confidence of someone who has not checked the odds.',
-      'Your turn, {P}. No pressure. Well, a little pressure. Actually, a lot.',
-      'Here comes {P}, strategy level: vibes.',
-      '{P} is thinking. I can hear the gears. They are squeaking.',
-      'Go on, {P}. Make it interesting for once.',
-      '{P}, the kittens are watching. They are always watching.',
-      'Next up, {P}, last seen making questionable choices.',
-      '{P}\'s turn. Remember, cards are for playing, not for staring at.',
-      '{P}, show us that big brain energy. Or any energy, really.',
-      'The spotlight is on {P}. It is not flattering.',
-      '{P} takes the stage. Please keep your hands inside the vehicle.',
-      '{P}, please do something. Anything. I am begging.',
-      'And now, {P}, with another masterclass in hesitation.',
-      '{P} is up! Fingers crossed. Not for you, for the drama.',
-      'Fresh turn for {P}. Fresh chance to mess it up.',
-      '{P}, the table believes in you. That is a lie, but go anyway.',
-    ],
-    attack: [
-      '{P} chose violence! {T}, that is your problem now.',
-      'Attack! {P} just dumped all their problems on {T}.',
-      '{P} attacks! Cowardly, effective, beautiful.',
-      '{P} said "not my problem" and threw it at {T}. Iconic.',
-      'Incoming! {T}, you just got volunteered for extra turns.',
-      '{P} attacks {T}. Friendship status: it is complicated.',
-      'Wow, {P}. Did {T} steal your fish or something?',
-      '{P} is passing the hot potato to {T}, except the potato explodes.',
-      'Attack card! {P} has chosen chaos, and {T} has chosen nothing, because nobody asked.',
-      '{T}, you have been served. Courtesy of {P}.',
-      '{P} with the sneak attack! {T} did not see that coming. Nobody ever does.',
-      'Violence from {P}! {T}, please collect your bonus turns at the front desk.',
-      '{P} just skipped the line and pushed {T} into the danger zone.',
-      'And {P} hits {T} with the classic "you go first, buddy."',
-      '{P} attacks! {T}, I hope you stretched first.',
-      'That is cold, {P}. Ice cold. {T} is freezing.',
-      '{P} just hit {T} with paperwork. Two turns of it.',
-      '{T}, congratulations, you won extra turns! Nobody wanted them.',
-    ],
-    skip: [
-      '{P} skips. Bold strategy, also known as running away.',
-      '{P} hits Skip. Brave? No. Smart? Also no.',
-      'And {P} tiptoes away from the deck. Pure coward energy.',
-      '{P} skips! The deck is offended.',
-      'Skip! {P} has decided today is not the day to be brave.',
-      '{P} just ghosted the draw pile.',
-      'Look at {P} sneaking off like a cat leaving a vase it knocked over.',
-      'A Skip from {P}. Fear is a powerful motivator.',
-      '{P} said "no thank you" to the deck. Very polite. Very scared.',
-      '{P} skips. Somewhere, a kitten sighs in disappointment.',
-      'Skip card! {P} is speedrunning avoiding consequences.',
-      '{P} slides right past the deck. Smooth. Suspicious, but smooth.',
-      '{P} skips like a kid avoiding vegetables.',
-      '{P} uses Skip. The deck will remember this.',
-      'Skip! {P} has the survival instinct of a very nervous cat.',
-      '{P} just pressed the panic button labeled Skip.',
-    ],
-    favor: [
-      '{P} begs {T} for a favor. Have some dignity!',
-      '{P} wants a gift from {T}. The neediness is unreal.',
-      'Favor! {T}, give {P} your worst card. I am begging you.',
-      '{P} is asking {T} for a favor, like they are borrowing a cup of sugar. Of doom.',
-      'Ooh, {P} is shaking {T} down politely.',
-      '{T}, {P} wants a present. Wrap it in disappointment.',
-      '{P} played Favor. That is just stealing with good manners.',
-      '{P} puts on the puppy eyes for {T}. On a cat. Weird, but okay.',
-      'Charity time! {T} is donating to the {P} foundation.',
-      '{P} asks {T} for help. Bold, considering nobody here is your friend.',
-      '{P} wants {T}\'s card. Not the heart, just the card.',
-      'Favor time! {T}, choose wisely. Or cruelly.',
-      '{P} asks nicely. {T} will answer rudely, I hope.',
-      '{P} is collecting donations from {T}. Tax season came early.',
-    ],
-    shuffle: [
-      '{P} shuffles the deck, as if that fixes their life.',
-      'Shuffle! {P} is just stirring the soup of doom.',
-      '{P} shuffles. The kittens are now somewhere. Great job, genius.',
-      'And {P} scrambles the deck. Chaos agent spotted.',
-      '{P} shuffles like a magician who forgot the trick.',
-      'Shuffle! Whatever you knew about the deck, forget it.',
-      '{P} just reset everyone\'s plans. Petty. I respect it.',
-      'The deck has been stirred by {P}. Shaken, not stirred, actually.',
-      '{P} shuffles the cards, and everybody\'s See the Future just became fiction.',
-      '{P} panic-shuffles. Something scary must be on top.',
-      '{P} shuffles! Hope is restored. Briefly.',
-      '{P} is shuffling like their life depends on it. It might.',
-      'The deck gets a remix, courtesy of DJ {P}.',
-      '{P} shuffles. The kittens are playing hide and seek again.',
-    ],
-    future: [
-      '{P} peeks into the future. Spoiler alert, it is bad.',
-      '{P} stares at the top three cards like they owe them money.',
-      'See the Future! {P} now knows exactly how they will lose.',
-      '{P} is reading the deck like a horoscope. Mercury is in retrograde, by the way.',
-      'Ooh, {P} has secret knowledge now. Watch their face. Watch it carefully.',
-      '{P} looked into the future and the future looked back.',
-      '{P} checked the top cards. Poker face is loading. Still loading.',
-      'Fortune telling with {P}! Today\'s fortune: you will make a bad decision.',
-      '{P} peeks. If they skip next, we all know why.',
-      '{P} just read the spoilers. Typical.',
-      'Crystal ball out for {P}. The ball says "lol, good luck."',
-      '{P} sees the future. The future sees a loser.',
-      '{P} just peeked. Act natural, {P}. Too late.',
-      'See the Future! {P} now has trust issues with the deck.',
-      '{P} read the top cards and immediately aged five years.',
-    ],
-    pair: [
-      '{P} pickpockets {T}! Check your pockets, everyone.',
-      'A pair of {C}! {P} is robbing {T} in broad daylight.',
-      '{P} steals from {T}. Crime pays, apparently.',
-      'Two {C}s and zero shame. {P} raids {T}\'s hand.',
-      '{P} just swiped a card from {T}. Somebody call the cat police.',
-      'Grand theft kitty! {P} hits {T}.',
-      '{T}, you have been robbed by a pair of {C}s. Embarrassing.',
-      '{P} matched two {C}s and chose crime.',
-      'Yoink! {P} reaches into {T}\'s hand like it is a cookie jar.',
-      'Pair play! {P} takes from {T}. Sharing is caring, except when it is stealing.',
-      '{P} is running a two-cat heist on {T}.',
-      'Two {C}s walk into a bar and rob {T}. Thanks, {P}.',
-      '{P} snatches a card from {T}. Smooth criminal.',
-      '{T} just got pickpocketed by a pair of {C}s. Tragic.',
-    ],
-    triple: [
-      '{P} demands a {C} from {T}. Very specific. Very needy.',
-      'Three of a kind! {P} wants a {C}. {T}, cough it up.',
-      '{P} is shaking down {T} for a {C}. This is a mugging.',
-      'Triple combo! {P} placed a very specific order with {T}: one {C}, extra spicy.',
-      '{P} just went shopping in {T}\'s hand. Item requested: {C}.',
-      'Three cards for one {C}? {P} is either a genius or very desperate.',
-      '{T}, do you have a {C}? Be honest. The whole table is watching.',
-      '{P} names a {C}! This is either a big play or a big flop.',
-      'The triple! {P} is going fishing in {T}\'s hand for a {C}.',
-      '{P} asks {T} for a {C} like a waiter taking an order.',
-      'Three cards in, {P} wants a {C}. The suspense!',
-      '{P} is going all in for one {C}. Respect the hustle.',
-      'Hand it over, {T}! {P} is asking for a {C}.',
-    ],
-    nope: [
-      'NOPE! {P} said absolutely not.',
-      '{P} drops a Nope! Denied, rejected, deleted.',
-      'Nope from {P}! Somebody call the burn unit.',
-      '{P} slaps that down with a big fat Nope!',
-      'Nope! {P} is not having it today.',
-      'And {P} shuts it down! The audacity!',
-      'Rejected! {P} just said "how about no."',
-      '{P} Noped that so hard I felt it in my whiskers.',
-      'Denied by {P}! Return to sender!',
-      'Nope! {P} cancels it like a bad subscription.',
-      '{P} said "nope" and meant it with their whole chest.',
-      'That play has been Noped into another dimension by {P}.',
-      'Nope! {P} just ruined someone\'s whole day.',
-      '{P} plays Nope! The plan has been cancelled due to {P}.',
-      'Denied! {P} is the bouncer of this table.',
-    ],
-    nopeNope: [
-      '{P} Noped the Nope! It is Nopes all the way down!',
-      'A Nope on a Nope! {P} is playing 4D chess. Badly, but still.',
-      'Counter-Nope from {P}! The pettiness is off the charts.',
-      '{P} Noped the Nope! Somebody get these cats a referee!',
-      'Nope-ception! {P} just un-cancelled the cancel.',
-      '{P} said "nope to your nope." This is beautiful drama.',
-      'Plot twist! {P} Nopes back! The table is in shambles!',
-      '{P} has entered the Nope war. There are no winners here.',
-      '{P} Nopes the Nope! My head hurts.',
-      'Another Nope from {P}! This is the pettiest table I have ever seen.',
-      '{P} just reversed the reversal. Cinema.',
-    ],
-    stands: [
-      'The Nope got Noped. Chaos continues!',
-      'Denied the denial! The action goes through.',
-      'After all that Noping, it happens anyway. Classic.',
-      'The Nope war is over and the original play survives. What a ride.',
-      'All those Nopes for nothing. Beautiful waste of cards.',
-      'Nope cancelled! The original play wins the argument.',
-      'The Nopes cancel out. It still happens. Drama for nothing.',
-      'Okay, after all that, the play goes through. Everyone calm down.',
-    ],
-    boom: [
-      '{P} drew an Exploding Kitten! Oh, this is delicious.',
-      'Uh oh. {P} is holding a live kitten. Smile for the funeral photo!',
-      'KITTEN! {P}, any last words? Make them quick.',
-      'Tick, tick, tick! {P} is holding the bomb!',
-      '{P} drew the kitten! I would say I am surprised, but I am not.',
-      'Oh no! {P} just pulled the worst card in the game. Love that for us.',
-      'Exploding Kitten for {P}! Everybody step back three feet.',
-      '{P} has a kitten and a very sweaty paw.',
-      'BOOM incoming! {P}, please tell me you saved your Defuse.',
-      '{P} found the kitten. Or the kitten found {P}. Either way, yikes.',
-      'Somebody hug {P}. Actually no, do not, they might explode.',
-      '{P} drew a kitten! Quick, look surprised.',
-      'Kitten alert! {P}, do not panic. Okay, panic a little.',
-      '{P} has the bomb! The table holds its breath.',
-      'Oh dear. {P}. Kitten. Ticking. You do the math.',
-    ],
-    defuse: [
-      '{P} defused it! Hands of a surgeon, nerves of a wet noodle.',
-      'Defused! {P} survives. Honestly, disappointing.',
-      '{P} cut the right wire! Lucky, not talented.',
-      'Phew! {P} lives to embarrass themselves another day.',
-      '{P} defused the kitten. The crowd goes mild.',
-      'Saved! {P} just used their one get-out-of-jail-free card.',
-      '{P} survives! I had money on the explosion, though.',
-      '{P} defuses it with the calm of someone screaming internally.',
-      'Wire cut! {P} is fine. For now. Mostly.',
-      'Close call for {P}! No more safety net, my friend.',
-      '{P} defused it! The kitten is filing a complaint.',
-      'Snip! {P} lives. The crowd is mildly impressed.',
-      '{P} survived the kitten. Do not get comfortable.',
-      'Defused by {P}! That was your only life jacket, by the way.',
-    ],
-    hide: [
-      '{P} tucked the kitten back into the deck. Somebody is in trouble.',
-      'The kitten goes back in, and {P} is smiling way too much.',
-      '{P} hid the bomb. Nobody trust {P}. Ever.',
-      '{P} just planted a trap. Next player, good luck!',
-      'Where did {P} put it? Only {P} knows. Sinister.',
-      '{P} slid the kitten back in. Every draw just got scarier.',
-      '{P} is now officially the villain of this table.',
-      'The kitten is back in the deck, armed and grumpy. Thanks, {P}.',
-      '{P} hid the kitten. I saw where. Just kidding, I am not telling.',
-      '{P} put the bomb back with a suspicious little grin.',
-      'A kitten has been planted by {P}. Somebody is going to cry.',
-    ],
-    explode: [
-      '{P} EXPLODED! Rest in pieces.',
-      'Boom! {P} is now a fine orange mist.',
-      '{P} is out! Thanks for playing, and by playing I mean losing.',
-      'Kaboom! {P} has been deleted from the cat-alog.',
-      '{P} blew up! Somebody sweep up the fur.',
-      'And {P} goes out with a bang! Literally.',
-      'BOOM! {P} has left the chat.',
-      '{P} exploded! Please hold your applause. Actually no, clap.',
-      'Kaboom! {P}\'s strategy has been revealed: there was none.',
-      '{P} is out! Tell their cat tree I said goodbye.',
-      'Spectacular! {P} explodes in a beautiful shower of bad decisions.',
-      'Rest in peace, {P}. You were the bravest. Also the unluckiest.',
-      '{P} is gone! Nine lives, and they used all of them at once.',
-      '{P} exploded! Their last words were probably a bad strategy.',
-      'Kaboom! {P} just became a cautionary tale.',
-      '{P} is out! The kittens send their condolences. Not really.',
-      'Boom! {P} has been promoted to spectator.',
-      '{P} exploded! That is what we call a learning experience.',
-    ],
-    gave: [
-      '{T} hands over a card. Generous, or just terrified?',
-      '{T} gives up a card with the face of a broken cat.',
-      '{T} donates a card. Please clap for this act of forced kindness.',
-      'Look at {T} giving away their worst card with a smile. Diabolical.',
-      '{T} paid the toll. Next time, hide your cards better.',
-      '{T} hands it over. That is the face of someone planning revenge.',
-      '{T} gives up a card like it is a kidney.',
-      '{T} hands it over. Never forget this betrayal.',
-      '{T} pays up. The tax collector is very pleased.',
-    ],
-    stolen: [
-      '{T} just got robbed. Lock your paws next time.',
-      'Yoink! {T} is one card lighter and a lot sadder.',
-      '{T}, say goodbye to that card. It was nice knowing it.',
-      'Poor {T}. Robbed in front of everyone.',
-      '{T} is getting picked on, and I am here for it.',
-      'That card had a family, {T}. And now it is gone.',
-      '{T} got robbed so fast they did not even blink.',
-      'Somebody check on {T}. That steal hurt.',
-      '{T}, that card is gone forever. Thoughts and prayers.',
-    ],
-    miss: [
-      '{T} has no {C}! Awkward. {P} wasted three cards on that.',
-      'Swing and a miss! No {C} for {P}. Tragic. Hilarious.',
-      '{P} asked for a {C} and got nothing. Big oof.',
-      'No {C}! {P} just threw three cards into the void.',
-      '{T} does not have a {C}. {P}, the shame is real.',
-      'Three cards gone, nothing gained. {P}, that was art.',
-      'No {C}! {P}, that was a very expensive question.',
-      '{T} has no {C}. {P} just paid three cards for a no.',
-      'Wrong guess! {P} asked {T} for a {C} and got air.',
-    ],
-    safeDraw: [
-      '{P} draws and lives. Boring, but okay.',
-      '{P} survives the draw. The kittens are disappointed.',
-      'Safe card for {P}. The suspense was unbearable for nobody.',
-      '{P} draws. Nothing explodes. Next!',
-      '{P} draws like it is nothing. It was nothing. Lucky.',
-      'Another card for {P}\'s collection of probably useless cards.',
-      '{P} takes a card and pretends they planned that.',
-      '{P} draws with the courage of a cat entering a bathtub.',
-      '{P} draws. The deck says not yet.',
-      '{P} survives another draw. The kittens are getting impatient.',
-      'Another safe draw for {P}. Do not let it go to your head.',
-      '{P} draws a card and lives to whine another turn.',
-      'No kitten for {P}. Lucky paws.',
-      '{P} draws and exhales. We all heard that.',
-    ],
-    safeLow: [
-      '{P} draws and survives. The deck is getting spicy though.',
-      '{P} lives! The odds are getting nasty in there.',
-      'Phew, {P} is safe. For now. Probably.',
-      'The deck is thin and {P} is sweating. I can see it from here.',
-      '{P} survives a thin deck. Somebody check their pulse.',
-      'Every draw is a coin flip now, and {P} keeps winning. Suspicious.',
-      'The deck is tiny and {P} still survives. Lucky cat.',
-      '{P} lives on a thin deck. My heart cannot take this.',
-      '{P} draws from the danger zone and walks away. Unreal.',
-    ],
-    bigHand: [
-      '{P} is holding {h} cards. That is not a hand, that is a library.',
-      '{h} cards, {P}? Are you planning to build a house with them?',
-      '{P} is hoarding {h} cards like a dragon. A tiny, scared dragon.',
-      '{P} has {h} cards and still somehow no plan.',
-      '{P} has {h} cards. Somebody get them a bigger table.',
-      '{h} cards in {P}\'s paws and not a single good idea.',
-      '{P} is collecting cards like they are trading stickers.',
-    ],
-    tinyHand: [
-      '{P} is down to {h} card. Living on the edge.',
-      '{P} has {h} card left. That is not a hand, that is a prayer.',
-      'One card, {P}? Bold. Very bold. Possibly stupid.',
-      '{P} is running on one card and pure hope.',
-      '{P} has just one card left. The pressure is on.',
-      'Down to one card, {P}? That is not a hand, that is a dare.',
-    ],
-    lastTwo: [
-      'Down to the final two! {P} versus {T}. Sweaty paws everywhere.',
-      'Final showdown! {P} and {T}. Only one cat leaves this table in one piece.',
-      'It is {P} against {T}! I have not been this excited since the last explosion.',
-      'Two cats left! {P} and {T}, this is your main character moment.',
-      'The final duel! {P} versus {T}. Whoever loses, I am roasting you forever.',
-      'Two cats, one table, zero mercy. {P} versus {T}!',
-      '{P} and {T}, the final round. Make it dramatic.',
-      'Only {P} and {T} remain. The kittens are getting excited.',
-    ],
-    idle: [
-      '{P}, the kittens are aging. Make a move!',
-      'Hello? {P}? Did you fall asleep on the keyboard?',
-      '{P} is thinking. First time for everything.',
-      '{P}, any day now. The bombs are getting bored.',
-      'We are waiting on {P}. Somebody bring a pillow.',
-      '{P} is taking forever. Is this strategy or a nap?',
-      'Earth to {P}! Your turn has grown a beard.',
-      '{P}, I could have explained the whole game twice by now.',
-      'Still waiting for {P}. The music is on its third loop.',
-      '{P} is buffering. Please stand by.',
-      '{P}, your turn is so long it qualifies as a vacation.',
-      'Tick tock, {P}! Even the bomb is bored.',
-      'Did {P} go make a sandwich? Asking for the table.',
-      '{P}, the cards will not play themselves. I checked.',
-    ],
-    roulette: [
-      'The wheel has spoken! {P} goes first. Good luck, you will need it.',
-      '{P} goes first! The universe clearly has a sense of humor.',
-      'Roulette picks {P}! Everyone else, relax. For now.',
-      'And the lucky victim is {P}! Lead us into disaster.',
-      '{P} starts! No pressure. Okay, a lot of pressure.',
-    ],
-    win: [
-      '{P} WINS! Everyone else, please reflect on your choices.',
-      'Champion, {P}! The last cat standing, mostly by accident.',
-      'Victory for {P}! Somebody frame this, it will never happen again.',
-      '{P} wins! Bow down, peasants. Or paws down. Whatever.',
-      'And the crown goes to {P}! Was it skill? I doubt it. But congrats!',
-      '{P} is the last cat standing! The rest of you, practice.',
-      'Winner, {P}! Everyone else, the exit is that way.',
-      '{P} survives it all! I take back half of what I said. The other half stays.',
-      'Ladies and gentlemen, {P}! Undefeated, until next game.',
-      '{P} wins! Everybody else, the walk of shame is to your left.',
-      'Champion {P}! Please do not let this go to your head.',
-      '{P} takes the crown! The rest of you, practice. A lot.',
-      'Victory to {P}! I will roast you even harder next game.',
-    ],
-    targeted: [
-      '{P} picked {T} out of the crowd. Personal vendetta much?',
-      'Targeted Attack! {T}, you have been specially selected for suffering.',
-      '{P} put a big red target on {T}. Subtle as a brick.',
-      '{T} gets two turns, courtesy of {P}\'s grudge.',
-      'Sniper shot from {P}! {T} never saw it coming.',
-      '{P} skipped the line and went straight for {T}. Rude. Effective.',
-    ],
-    personal: [
-      '{P} attacked themselves. Three turns of self-inflicted chaos!',
-      'Personal Attack! {P} said "I will do it myself." Bold.',
-      '{P} just volunteered for three turns. Somebody check their temperature.',
-      'Three turns for {P}, by choice. This is either genius or a cry for help.',
-    ],
-    superskip: [
-      '{P} Super Skips! Every single turn, gone. Poof.',
-      'Super Skip! {P} just ghosted their whole to-do list.',
-      '{P} rockets past all their turns. See you never, deck!',
-      'All turns cancelled! {P} has achieved maximum avoidance.',
-    ],
-    reverse: [
-      'Reverse! The whole table spins the other way. Thanks, {P}.',
-      '{P} flipped the turn order. Everyone is dizzy now.',
-      'Uno reverse energy from {P}! Wrong game, same chaos.',
-      '{P} reversed it! Whoever was next just got a free pass.',
-      'Turn order flipped by {P}. Somebody draw a map.',
-    ],
-    bury: [
-      '{P} buried the top card. What was it? Nobody knows!',
-      'Bury! {P} is hiding evidence. Very suspicious.',
-      '{P} dug a hole and dropped a card in it. Shady.',
-      'Card buried by {P}. Somewhere in that deck, a mystery waits.',
-    ],
-    bottom: [
-      '{P} draws from the bottom! The top card feels very left out.',
-      'Bottom draw! {P} clearly knows something about the top.',
-      '{P} went digging at the bottom of the barrel. Classy.',
-      'From the bottom! {P} is avoiding the top like it owes them money.',
-    ],
-    raise: [
-      '{P} peeks at the bottom of the deck. Nosy!',
-      'Bottom Peek! {P} is reading the deck backwards.',
-      '{P} checks the bottom card. Keep it or flip it? Drama!',
-    ],
-    bombstack: [
-      'BOMB STACK! {P} just put every danger card on top. Absolute villain.',
-      '{P} stacked the bombs! The next draw is going to be spicy.',
-      'Oh no. {P} piled up the kittens right on top. Next player, I am so sorry.',
-      'Bomb Stack from {P}! That is not a deck anymore, that is a minefield.',
-    ],
-    reveal: [
-      '{P} reveals the future to everyone! No more secrets.',
-      'Reveal! {P} just spoiled the next three cards for the whole table.',
-      'Everybody look! {P} is showing off the top of the deck.',
-    ],
-    share: [
-      '{P} shares the future with the next player. How generous. How suspicious.',
-      'Share the Future! {P} rearranged it first, of course.',
-      '{P} is passing secret notes about the deck. Sneaky.',
-    ],
-    alter: [
-      '{P} is rewriting the future! Time travel is real.',
-      'Alter the Future! {P} just moved the cards like a magician.',
-      '{P} rearranged the deck. Somebody is going to regret drawing next.',
-      'Future altered by {P}. Trust nothing.',
-      '{P} plays deck Tetris. Somebody is getting a kitten-shaped block.',
-    ],
-    dig: [
-      '{P} is digging deeper. Treasure or trouble?',
-      'Dig Deeper! {P} does not like what they see.',
-      '{P} grabs a shovel and goes looking for a better card.',
-    ],
-    garbage: [
-      'Garbage Collection! Everybody take out your trash.',
-      '{P} declared trash day. Say goodbye to a card, everyone.',
-      'Garbage time! {P} is making the whole table clean house.',
-    ],
-    potluck: [
-      'Potluck! Everyone bring a card. Hopefully not a kitten.',
-      '{P} started a potluck. The top of the deck is about to get weird.',
-      'Potluck time! What did everyone bring? Bad decisions, mostly.',
-    ],
-    spirit: [
-      'Haunted Deck! The ghosts are throwing cards back in.',
-      '{P} let the ghosts shuffle cards into the deck. Spooky.',
-      'The dead are restless! Thanks a lot, {P}.',
-    ],
-    feast: [
-      '{P} is feeding the ghosts! Everyone pay up.',
-      'Ghost Feast! Dinner is served, and you are all the chefs.',
-      '{P} throws a party for the dead. The living are not invited.',
-    ],
-    haunted: [
-      'Haunted Attack! The ghosts are paying {T} a visit.',
-      '{P} summoned the dead for an attack. Creepy and effective.',
-      'Boo! {T} is getting haunted with extra turns.',
-    ],
-    sticky: [
-      '{P} slapped Sticky Paws on {T}. Their next card belongs to {P}!',
-      'Sticky Paws! {T}, your next draw is already spoken for.',
-      '{P} is a professional pickpocket now. {T}, watch your draws.',
-    ],
-    mark: [
-      '{P} marked {T}\'s hand. Everybody gets a peek!',
-      'Mark! {T} has a card on display. Embarrassing.',
-      '{P} put a spotlight on one of {T}\'s cards.',
-    ],
-    blindfold: [
-      '{P} blindfolded {T}! Play your cards in the dark, buddy.',
-      'Blindfold! {T} cannot see a thing. This is going to be hilarious.',
-      '{T} is blind now. Good luck, champ. You will need it.',
-    ],
-    blindFail: [
-      '{P} played blind and wasted a card. Comedy gold.',
-      'Oops! {P} played a mystery card and it did nothing. Classic.',
-      'Blind play fail! {P}, maybe try squinting next time.',
-    ],
-    clone: [
-      '{P} cloned the last card! Copy paste, but evil.',
-      'Clone! {P} has zero original ideas and I love it.',
-      '{P} copied someone else\'s homework. Again.',
-    ],
-    tower: [
-      '{P} built a Treasure Tower. Come steal from them, I dare you.',
-      'Tower up! {P} is hiding behind a castle now.',
-      '{P} has a tower. Thieves, choose a different victim.',
-    ],
-    howl: [
-      'HOOOWL! {P} is calling out the other Howling Kitten!',
-      '{P} plays a Howling Kitten. Somebody at this table is sweating.',
-      'A howl from {P}! The other kitten will answer. Eventually. Explosively.',
-    ],
-    suncat: [
-      'The Sun Cat rises! {P} is playing it as whatever they want.',
-      'Sun Cat! {P} has the power of the gods and uses it for petty revenge.',
-      '{P} summons the Sun Cat. Divine intervention, kitty style.',
-    ],
-    catastrophe: [
-      'CAT-ASTROPHE! The Shadow Cat is loose and nothing can stop it!',
-      '{P} started the end of the world. Over a card game. Typical.',
-      'Cat-astrophe from {P}! Hide your Defuses, they will not help now.',
-    ],
-    revive: [
-      '{P} is BACK from the dead! Undead and very angry.',
-      'Rise and shine, {P}! The grave could not hold you.',
-      '{P} has returned! Zombie mode activated.',
-      'Look who crawled back! {P}, welcome back to the pain.',
-    ],
-    implodeHide: [
-      'The Collapsing Kitten sits face up in the deck. Everyone count the cards!',
-      'A face-up Collapsing Kitten! Whoever draws it is gone for good.',
-      '{P} put the Collapsing Kitten back, face up. Now we all know who is doomed.',
-    ],
-    shadow: [
-      'The Shadow Cat appears! {P}, pay up or blow up.',
-      '{P} drew the Shadow Cat. Darkness has entered the chat.',
-      'Shadow Cat! {P} has some explaining to do.',
-    ],
-    generic: [
-      '{P} played {C}. Bold choice. Probably wrong, but bold.',
-      '{C}! {P} is really trying something here.',
-      '{P} with the {C}. I did not see that coming, and neither did you.',
-      'And {P} pulls out {C}. Let us see if it works.',
-    ],
-  };
+  let hideT = 0, cur = null, curPrio = 0;
   // Shuffle-bag: every line in a group plays once before any repeats, never the same line twice in a row.
   const bags = {};
   const pick = key => {
-    const arr = L[key];
+    const arr = V[key];
     let bag = bags[key];
     if (!bag || !bag.length) {
       bag = bags[key] = shuffleArr(arr.map((_, i) => i));
       if (arr.length > 1 && bag[bag.length - 1] === lastLine[key]) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
     }
-    const i = bag.pop(); lastLine[key] = i; return arr[i];
+    const i = bag.pop(); lastLine[key] = i; return i;
   };
-  const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k] == null ? '' : String(v[k]));
-  function say(text, prio = 1, mood = 'roast', force = false) {
-    if (!on && !force) return;
-    if (mood === 'hype' && Math.random() < .4) text = HYPE[rand(HYPE.length)] + text;
-    const now = performance.now();
-    if (prio < 2 && now < busyUntil) return;
-    busyUntil = now + 1200 + text.length * 55;
-    const el = $('#ann'); $('#annText').textContent = text; el.classList.add('show');
-    clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('show'), 2400 + text.length * 50);
-    if (!synth || Sfx.muted) return;
-    try {
-      if (synth.speaking || synth.pending) { if (prio >= 2) synth.cancel(); else return; }
-      speak(text, mood);
-    } catch (e) {}
+  const caption = t => t.replace(/\[[^\]]*\]\s*/g, '');
+  function showCaption(text, who, ms) {
+    $('#annText').textContent = who ? `${who}: ${text}` : text;
+    const el = $('#ann'); el.classList.add('show');
+    clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('show'), ms);
   }
-  const line = (key, v, prio) => say(fill(pick(key), v), prio, MOOD_OF[key] || 'roast');
+  function stopAudio() { if (cur) { cur.onended = cur.onerror = null; cur.pause(); cur = null; Sfx.duck(false); } }
+  function play(key, who, prio = 1, force = false) {
+    if ((!on && !force) || !V[key]) return;
+    if (cur && !cur.ended && prio <= curPrio && prio < 2) return;
+    const i = pick(key), text = caption(V[key][i]);
+    showCaption(text, who, 2400 + text.length * 50);
+    stopAudio();
+    if (Sfx.muted) return;
+    const a = new Audio(`audio/announcer/${key}_${i}.mp3`);
+    a.volume = .95; cur = a; curPrio = prio;
+    const done = () => { if (cur === a) { cur = null; Sfx.duck(false); } };
+    a.onended = done; a.onerror = done;
+    a.play().then(() => Sfx.duck(true)).catch(done);
+  }
+  const line = (key, who, prio) => play(V[key] ? key : 'generic', who, prio);
   function onEvent(e) {
     if (!on || !view.snap) return;
     const N = s => (view.snap.seats[s] || {}).nick || 'Someone';
     const P = N(e.p);
     switch (e.k) {
-      case 'kittens': line('start', {n: view.snap.seats.length, k: e.n}, 2); break;
-      case 'turn': if (e.tl > 1) line('turnMulti', {P, t: e.tl}, 1); else if (Math.random() < .45) line('turn', {P}, 0); break;
+      case 'kittens': line('start', '', 2); break;
+      case 'turn': if (e.tl > 1) line('turnMulti', P, 1); else if (Math.random() < .45) line('turn', P, 0); break;
       case 'play': {
-        if (e.defuse) { if (e.cards[0].t !== 'undead') line('defuse', {P}, 2); break; }
+        if (e.defuse) { if (e.cards[0].t !== 'undead') line('defuse', P, 2); break; }
         if (e.forced) break;
         const t = e.cards[0].t, ALIAS = {future5: 'future', alternow: 'alter', alter5: 'alter', shufflenow: 'shuffle', swap: 'shuffle'};
-        let key = e.n === 2 ? 'pair' : e.n === 3 ? 'triple' : (ALIAS[t] || t);
-        if (!L[key]) key = 'generic';
-        let T = e.target != null ? N(e.target) : '';
-        if (t === 'attack' || t === 'haunted') { const dir = (e.after.fx && e.after.fx.dir) || 1, n = e.after.alive.length; let j = e.p; do { j = (j + dir + n) % n; } while (!e.after.alive[j] && j !== e.p); T = N(j); }
-        line(key, {P, T, C: (TYPES[e.n === 3 ? e.named : t] || {name: t}).name}, 1);
+        line(e.n === 2 ? 'pair' : e.n === 3 ? 'triple' : (ALIAS[t] || t), P, 1);
         const left = (e.after.hands[e.p] || []).length;
-        if (left === 1 && Math.random() < .5) setTimeout(() => line('tinyHand', {P, h: left}, 0), 2600);
+        if (left === 1 && Math.random() < .5) setTimeout(() => line('tinyHand', P, 0), 2600);
         break;
       }
-      case 'nope': line(e.cancelled ? 'nope' : 'nopeNope', {P}, 2); break;
-      case 'stands': line('stands', {}, 1); break;
+      case 'nope': line(e.cancelled ? 'nope' : 'nopeNope', P, 2); break;
+      case 'stands': line('stands', '', 1); break;
       case 'draw': {
         const h = (e.after.hands[e.p] || []).length;
-        if (e.card.t === 'shadow') line('shadow', {P}, 2);
-        else if (e.card.t === 'boom' || e.card.t === 'implode') line('boom', {P}, 2);
-        else if (e.after.kit > 0 && e.after.deckN <= 8 && Math.random() < .5) line('safeLow', {P}, 0);
-        else if (h >= 11 && Math.random() < .35) line('bigHand', {P, h}, 0);
-        else if (Math.random() < .3) line('safeDraw', {P}, 0);
+        if (e.card.t === 'shadow') line('shadow', P, 2);
+        else if (e.card.t === 'boom' || e.card.t === 'implode') line('boom', P, 2);
+        else if (e.after.kit > 0 && e.after.deckN <= 8 && Math.random() < .5) line('safeLow', P, 0);
+        else if (h >= 11 && Math.random() < .35) line('bigHand', P, 0);
+        else if (Math.random() < .3) line('safeDraw', P, 0);
         break;
       }
-      case 'hide': line('hide', {P}, 1); break;
+      case 'hide': line('hide', P, 1); break;
       case 'explode': {
-        line('explode', {P}, 3);
+        line('explode', P, 3);
         const left = e.after.alive.map((a, i) => a ? i : -1).filter(i => i >= 0);
-        if (left.length === 2) setTimeout(() => line('lastTwo', {P: N(left[0]), T: N(left[1])}, 2), 3800);
+        if (left.length === 2) setTimeout(() => line('lastTwo', `${N(left[0])} vs ${N(left[1])}`, 2), 3800);
         break;
       }
-      case 'transfer': if (e.why === 'favor') line('gave', {T: N(e.from)}, 0); else if (Math.random() < .85) line('stolen', {T: N(e.from)}, 0); break;
-      case 'miss': line('miss', {P, T: N(e.target), C: TYPES[e.named].name}, 1); break;
-      case 'win': line('win', {P}, 3); break;
-      case 'roulette': setTimeout(() => line('roulette', {P}, 2), 4300); break;
-      case 'revive': line('revive', {P}, 2); break;
-      case 'implodeHide': line('implodeHide', {P}, 2); break;
-      case 'blindFail': line('blindFail', {P}, 1); break;
+      case 'transfer': if (e.why === 'favor') line('gave', N(e.from), 0); else if (Math.random() < .85) line('stolen', N(e.from), 0); break;
+      case 'miss': line('miss', P, 1); break;
+      case 'win': line('win', P, 3); break;
+      case 'roulette': setTimeout(() => line('roulette', P, 2), 4300); break;
+      case 'revive': line('revive', P, 2); break;
+      case 'implodeHide': line('implodeHide', P, 2); break;
+      case 'blindFail': line('blindFail', P, 1); break;
     }
   }
   return {
-    onEvent, say,
-    idle(s) { if (view.snap) line('idle', {P: view.snap.seats[s].nick}, 1); },
+    onEvent,
+    idle(s) { if (view.snap) line('idle', view.snap.seats[s].nick, 1); },
+    hello() { Sfx.unlock(); play('mic', '', 3, true); },
     get on() { return on; },
-    setOn(v) { on = v; try { localStorage.setItem('ksa-ann', v ? '1' : '0'); } catch (e) {} if (!v) { if (synth) synth.cancel(); $('#ann').classList.remove('show'); Sfx.duck(false); } },
-    stop() { if (synth) synth.cancel(); Sfx.duck(false); },
-    setVoice(name) { chosen = name; try { localStorage.setItem('ksa-voice', name); } catch (e) {} voice = voiceList.find(v => v.name === name) || voice; },
-    test() { Sfx.unlock(); say('Hey hey! MC Whiskers here. Somebody at this table is going to explode tonight, and I literally cannot wait!', 3, 'hype', true); },
-    refreshVoices: pickVoice,
+    setOn(v) { on = v; try { localStorage.setItem('ksa-ann', v ? '1' : '0'); } catch (e) {} if (!v) { stopAudio(); $('#ann').classList.remove('show'); } },
+    stop: stopAudio,
   };
 })();
 
@@ -1399,7 +782,7 @@ function toggleMute() { Sfx.setMuted(!Sfx.muted); if (Sfx.muted) Announcer.stop(
 document.addEventListener('click', e => {
   if (e.target.closest('.mute-toggle')) toggleMute();
   if (e.target.closest('.music-toggle')) { Sfx.setMusic(!Sfx.musicOn); syncMute(); }
-  if (e.target.closest('.ann-toggle')) { Announcer.setOn(!Announcer.on); syncMute(); if (Announcer.on) Announcer.say('MC Whiskers is back on the mic. Try to play well this time.', 2); }
+  if (e.target.closest('.ann-toggle')) { Announcer.setOn(!Announcer.on); syncMute(); if (Announcer.on) Announcer.hello(); }
 });
 addEventListener('keydown', e => { if ((e.key === 'm' || e.key === 'M') && !(e.target.closest && e.target.closest('input'))) toggleMute(); });
 
@@ -4498,9 +3881,6 @@ $('#discLbl').addEventListener('click', openDiscard);
   showScreen('home');
   renderPickers(); initPreview(); syncMute();
   renderStagePickers(); setStage(me.stage);
-  Announcer.refreshVoices();
-  $('#voicePick').addEventListener('change', e => { Announcer.setVoice(e.target.value); Announcer.test(); });
-  $('#voiceTest').addEventListener('click', () => Announcer.test());
   requestAnimationFrame(loop);
   initNet();
   try { await Promise.race([Promise.all([document.fonts.load('48px Bungee'), document.fonts.load('500 28px "Chakra Petch"'), document.fonts.load('700 24px "Chakra Petch"')]), sleep(3000)]); } catch (e) {}
