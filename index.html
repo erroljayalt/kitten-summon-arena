@@ -213,6 +213,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .disc-top h3{margin:4px 0 6px;font-family:var(--f-display);font-weight:400;font-size:1.3rem}
 .disc-top .kind{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
 .disc-top p{margin:0;line-height:1.45;color:#dcd9f6;font-size:14px}
+.disc-top p.cv-use,.disc-top p.cv-tip{margin-top:10px;font-size:13.5px}
+.disc-top p.cv-tip{color:var(--muted)}
 .disc-sub{margin:18px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
 .disc-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px}
 .disc-list li{display:grid;gap:4px;font-size:11px;color:#dcd9f6;text-align:center;line-height:1.2}
@@ -3298,8 +3300,17 @@ function updateDiscardLbl() { const l = $('#discLbl'); l.textContent = discardTy
 function openDiscard() {
   if (!discardTypes.length) return setHint('The discard pile is empty.');
   const list = [...discardTypes].reverse(), top = list[0], T = TYPES[top];
+  $('#discTitle').textContent = 'Latest discard'; $('#discClose').setAttribute('aria-label', 'Close the discard pile');
   $('#discBody').innerHTML = `<figure class="disc-top"><img src="${faceURL[top] || ''}" alt="${esc(T.name)}"><figcaption><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><h3>${esc(T.name)}</h3><p>${esc(T.text)}</p></figcaption></figure>` +
     (list.length > 1 ? `<h4 class="disc-sub">Played before that</h4><ol class="disc-list">${list.slice(1, 13).map(t => `<li><img src="${faceURL[t] || ''}" alt=""><span>${esc(TYPES[t].name)}</span></li>`).join('')}</ol>` : '');
+  $('#disc').hidden = false; $('#discClose').focus();
+}
+// Close-up of a card in your hand, so you can read it while you wait for your turn.
+function openCardView(t) {
+  const T = TYPES[t], g = GUIDE[t] || {};
+  $('#discTitle').textContent = T.name; $('#discClose').setAttribute('aria-label', 'Close the card');
+  $('#discBody').innerHTML = `<figure class="disc-top"><img src="${faceURL[t] || ''}" alt="${esc(T.name)}"><figcaption><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><h3>${esc(T.name)}</h3><p>${esc(T.text)}</p>` +
+    (g.use ? `<p class="cv-use"><b>How to use it:</b> ${g.use}</p>` : '') + (g.tip ? `<p class="cv-tip"><b>Tip:</b> ${g.tip}</p>` : '') + `</figcaption></figure>`;
   $('#disc').hidden = false; $('#discClose').focus();
 }
 function closeDiscard() { $('#disc').hidden = true; }
@@ -3657,8 +3668,8 @@ function updateBar() {
   else if (sn.status === 'over') h = 'Round over.';
   else if (M && !M.alive[view.mySeat]) h = G && G.online ? 'You exploded. You are the host, so keep this tab open until the round ends or the game stops for everyone.' : 'You exploded. Watching the rest of the round.';
   else if (mine) h = v.msg;
-  else if (M && M.cur === view.mySeat) h = 'Waiting for the table…';
-  else h = M ? `Waiting for ${nm(M.cur)}…` : '';
+  else if (M && M.cur === view.mySeat) h = 'Waiting for the table… Tap a card to read it.';
+  else h = M ? `Waiting for ${nm(M.cur)}… Tap a card to read it.` : '';
   $('#hint').textContent = h;
   const imp = fxOf(M).imp;
   $('#deckLbl').textContent = (mine ? 'Tap to draw' : 'Draw pile') + (imp >= 0 ? ` · Collapsing Kitten #${imp + 1} from top` : '');
@@ -3724,7 +3735,7 @@ renderer.domElement.addEventListener('click', e => {
   if (h.discard) { Sfx.flip(); return openDiscard(); }
   const c = h.card;
   if (!$('#react').hidden && c.type === 'nope') return fireNope();
-  if (!turnPrompt()) return setHint('Hold on, it is not your turn.');
+  if (!turnPrompt()) { if (view.handBlind) return setHint('You are blindfolded, so you cannot look at your cards.'); Sfx.flip(); return openCardView(c.type); }
   c.selected = !c.selected; updateBar(); Sfx.flip();
 });
 
