@@ -1533,6 +1533,14 @@ function drawFace(type, img, photo) {
   rr(g, 5, 5, CW - 10, CH - 10, 40); g.lineWidth = 9; g.strokeStyle = T.color; g.stroke();
   return c;
 }
+// Painted card back (cards/back.jpg), clipped to the card's rounded shape.
+function drawBackArt(img) {
+  const c = document.createElement('canvas'); c.width = CW; c.height = CH; const g = c.getContext('2d');
+  rr(g, 4, 4, CW - 8, CH - 8, 40); g.clip();
+  const sc = Math.max(CW / img.width, CH / img.height), dw = img.width * sc, dh = img.height * sc;
+  g.drawImage(img, (CW - dw) / 2, (CH - dh) / 2, dw, dh);
+  return c;
+}
 function drawBack() {
   const c = document.createElement('canvas'); c.width = CW; c.height = CH; const g = c.getContext('2d');
   rr(g, 4, 4, CW - 8, CH - 8, 40); g.save(); g.clip();
@@ -4446,7 +4454,8 @@ addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#guide').hidden
   requestAnimationFrame(loop);
   initNet();
   try { await Promise.race([Promise.all([document.fonts.load('48px Bungee'), document.fonts.load('500 28px "Chakra Petch"'), document.fonts.load('700 24px "Chakra Petch"')]), sleep(3000)]); } catch (e) {}
-  backTex.image = drawBack(); backTex.needsUpdate = true;
+  const backArt = await loadArt('back');
+  backTex.image = backArt ? drawBackArt(backArt) : drawBack(); backTex.needsUpdate = true;
   { const sm = document.createElement('canvas'); sm.width = 184; sm.height = 258; sm.getContext('2d').drawImage(backTex.image, 0, 0, 184, 258); backURL = sm.toDataURL('image/png'); }
   await Promise.all(Object.keys(TYPES).map(async t => {
     const art = await loadArt(t);
