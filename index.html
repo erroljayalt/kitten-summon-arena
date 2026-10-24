@@ -308,7 +308,20 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .guide-head{display:flex;align-items:center;gap:12px;padding:16px 18px 0}
 .guide-head h2{font-family:var(--f-display);font-weight:400;font-size:1.3rem;margin:0;flex:1}
 .guide-close{font:inherit;font-size:22px;line-height:1;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
-.guide-tabs{display:flex;gap:6px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.guide-tabs{display:flex;gap:6px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.guide-search{flex:1 1 220px;display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0;max-width:340px;background:#0e0b22;border:1px solid var(--line);border-radius:999px;padding:0 12px;color:var(--muted)}
+.guide-search:focus-within{border-color:var(--holo);box-shadow:0 0 0 2px color-mix(in srgb,var(--holo) 35%,transparent)}
+.guide-search svg{width:16px;height:16px;flex:none}
+.guide-search input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:inherit;font-size:14px;padding:8px 0;outline:none}
+.guide-search input::placeholder{color:var(--muted)}
+.guide-empty{margin:24px 0;text-align:center;color:var(--muted)}
+.field-err{margin:6px 0 0;font-size:13px;color:#ff8fa3;display:flex;align-items:center;gap:6px}
+.field-err::before{content:"!";display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;font-size:11px;font-weight:700;flex:none}
+#nick[aria-invalid="true"]{border-color:var(--danger);box-shadow:0 0 0 2px color-mix(in srgb,var(--danger) 35%,transparent)}
+#nick.shake{animation:shake .4s ease}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){#nick.shake{animation:none}}
+@media (max-width:560px){.guide-search{flex-basis:100%;max-width:none;margin-left:0}}
 .guide-body{overflow:auto;padding:16px 18px 20px}
 .gcard{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
 .gcard:last-child{border-bottom:0}
@@ -431,8 +444,9 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
   <div class="profile">
     <div class="prof-left">
       <label class="field" for="nick">Your player name
-        <input id="nick" maxlength="16" autocomplete="nickname" placeholder="e.g. Captain Whiskers">
+        <input id="nick" maxlength="16" autocomplete="nickname" placeholder="e.g. Captain Whiskers" required aria-describedby="nickErr">
       </label>
+      <p class="field-err" id="nickErr" role="alert" hidden>Please enter your player name first.</p>
       <div class="preview-card">
         <div class="preview" id="preview" aria-label="Preview of your cat"></div>
         <button class="btn alt sm rand" id="randomLook" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/><circle cx="12" cy="6.5" r="1" fill="currentColor"/><circle cx="7" cy="13" r="1" fill="currentColor"/><circle cx="17" cy="13" r="1" fill="currentColor"/></svg>Randomize avatar</button>
@@ -525,6 +539,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
       <button class="chipsel" role="tab" data-gtab="cards" aria-pressed="true">Cards</button>
       <button class="chipsel" role="tab" data-gtab="combos" aria-pressed="false">Combos</button>
       <button class="chipsel" role="tab" data-gtab="turn" aria-pressed="false">Turn basics</button>
+      <label class="guide-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="guideSearch" placeholder="Search cards, e.g. nope, steal, future" aria-label="Search the card guide" autocomplete="off"></label>
     </div>
     <div class="guide-body" id="guideBody"></div>
   </div>
@@ -2461,7 +2476,7 @@ function renderHome() {
       <button class="btn sm${playing && !mine ? ' alt' : ''}" data-join="${esc(l.code)}">${mine ? 'Rejoin' : playing || full ? 'Watch' : 'Join'}</button></li>`;
   }).join('');
 }
-$('#lobbyList').addEventListener('click', e => { const b = e.target.closest('[data-join]'); if (b) joinLobby(b.dataset.join); });
+$('#lobbyList').addEventListener('click', e => { const b = e.target.closest('[data-join]'); if (b && requireNick()) joinLobby(b.dataset.join); });
 
 function genCode() { const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < 5; i++) s += a[rand(a.length)]; return s; }
 async function createLobby() {
@@ -2573,16 +2588,26 @@ $('#addBot').addEventListener('click', () => {
   const name = BOT_NAMES.find(n => !L.bots.includes(n)) || 'Bot';
   hostSyncSeats({bots: [...L.bots, name]});
 });
-$('#createBtn').addEventListener('click', createLobby);
-$('#joinBtn').addEventListener('click', () => joinLobby($('#joinCode').value));
-$('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') joinLobby($('#joinCode').value); });
+// A player name is required before creating, joining or starting a game.
+function requireNick() {
+  if (me.nick) return true;
+  const f = $('#nick');
+  f.setAttribute('aria-invalid', 'true'); $('#nickErr').hidden = false;
+  f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake');
+  f.scrollIntoView({block: 'center', behavior: 'smooth'}); f.focus({preventScroll: true});
+  return false;
+}
+$('#nick').addEventListener('input', () => { if ($('#nick').value.trim()) { $('#nick').removeAttribute('aria-invalid'); $('#nickErr').hidden = true; } });
+$('#createBtn').addEventListener('click', () => { if (requireNick()) createLobby(); });
+$('#joinBtn').addEventListener('click', () => { if (requireNick()) joinLobby($('#joinCode').value); });
+$('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter' && requireNick()) joinLobby($('#joinCode').value); });
 $('#copyInvite').addEventListener('click', () => {
   const t = $('#inviteLink').textContent, b = $('#copyInvite');
   const done = ok => { b.textContent = ok ? 'Copied' : 'Select and copy'; setTimeout(() => b.textContent = 'Copy', 1800); };
   if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => done(true), () => done(false)); else done(false);
   const r = document.createRange(); r.selectNodeContents($('#inviteLink')); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
 });
-$('#soloBtn').addEventListener('click', startSolo);
+$('#soloBtn').addEventListener('click', () => { if (requireNick()) startSolo(); });
 $('#leaveLobby').addEventListener('click', () => exitToHome());
 $('#backToGame').addEventListener('click', () => showScreen('game'));
 $('#leaveGame').addEventListener('click', () => { if (view.code === 'solo') exitToHome(); else { closeModal(); showScreen('lobby'); renderLobby(); } });
@@ -4363,11 +4388,11 @@ function guideHTML(tab) {
   if (tab === 'cards') {
     const entry = t => {
       const T = TYPES[t], G = GUIDE[t] || CAT_GUIDE;
-      return `<div class="gcard">${img(t)}<div><h3>${esc(T.name)}</h3><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><p>${G.use}</p><p class="tip">Tip: ${G.tip}</p></div></div>`;
+      return `<div class="gcard" data-q="${esc(T.text)}">${img(t)}<div><h3>${esc(T.name)}</h3><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><p>${G.use}</p><p class="tip">Tip: ${G.tip}</p></div></div>`;
     };
     const classic = ['attack', 'skip', 'favor', 'shuffle', 'future', 'nope', 'defuse', 'boom', ...CATS];
     const party = Object.keys(TYPES).filter(t => !classic.includes(t));
-    return `<h3 class="guide-sec">Classic deck</h3>${classic.map(entry).join('')}<h3 class="guide-sec">Party deck adds ${party.length} more</h3>${party.map(entry).join('')}`;
+    return `<section class="gsec"><h3 class="guide-sec">Classic deck</h3>${classic.map(entry).join('')}</section><section class="gsec"><h3 class="guide-sec">Party deck adds ${party.length} more</h3>${party.map(entry).join('')}</section>`;
   }
   if (tab === 'combos') {
     const pic = (t, n) => `<div class="combo-imgs">${Array(n).fill(img(t)).join('')}</div>`;
@@ -4389,11 +4414,29 @@ function guideHTML(tab) {
       <p>There is always one fewer kitten than players. Survive until everyone else explodes.</p></div></div>`;
 }
 function renderGuide() {
-  $('#guideBody').innerHTML = guideHTML(guideTab);
+  $('#guideBody').innerHTML = guideHTML(guideTab) + '<p class="guide-empty" id="guideEmpty" hidden>No cards match your search.</p>';
   $('#guideBody').scrollTop = 0;
   document.querySelectorAll('[data-gtab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.gtab === guideTab)));
+  filterGuide();
 }
-function openGuide(tab) { if (tab) guideTab = tab; renderGuide(); $('#guide').hidden = false; $('#guideClose').focus(); }
+// Hides guide entries that do not contain every word typed in the search box.
+function filterGuide() {
+  const words = $('#guideSearch').value.toLowerCase().split(/\s+/).filter(Boolean);
+  let shown = 0;
+  document.querySelectorAll('#guideBody .gcard').forEach(c => {
+    const txt = (c._txt = c._txt || (c.textContent + ' ' + (c.dataset.q || '')).toLowerCase().replace(/\s+/g, ' '));
+    const ok = words.every(w => txt.includes(w)); c.hidden = !ok; if (ok) shown++;
+  });
+  document.querySelectorAll('#guideBody .gsec').forEach(sec => { sec.hidden = !sec.querySelector('.gcard:not([hidden])'); });
+  document.querySelectorAll('#guideBody .guide-note').forEach(n => { n.hidden = words.length > 0; });
+  $('#guideEmpty').hidden = shown > 0;
+}
+$('#guideSearch').addEventListener('input', () => {
+  if ($('#guideSearch').value.trim() && guideTab !== 'cards') { guideTab = 'cards'; renderGuide(); return; }
+  filterGuide(); $('#guideBody').scrollTop = 0;
+});
+$('#guideSearch').addEventListener('keydown', e => { if (e.key === 'Escape' && e.target.value) { e.stopPropagation(); e.target.value = ''; filterGuide(); } });
+function openGuide(tab) { if (tab) guideTab = tab; $('#guideSearch').value = ''; renderGuide(); $('#guide').hidden = false; if (matchMedia('(pointer: fine)').matches) $('#guideSearch').focus(); else $('#guideClose').focus(); }
 function closeGuide() { $('#guide').hidden = true; }
 document.addEventListener('click', e => {
   if (e.target.closest('.guide-open')) openGuide();
