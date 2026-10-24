@@ -32,4 +32,6 @@ When the same file runs as a claude.ai Artifact, it uses the Artifact's shared d
 
 ## Card art
 
-All card art and characters are original. The card names follow the game's mechanics, but no official Exploding Kittens art or branding is used.
+Every card has painted art in `art/` (originals, 1024×1024). The game loads the 560×560 copies in `cards/`, named after each card's internal id (for example `cards/targeted.jpg`). A card without an image falls back to its drawn cat.
+
+The art is original; card names follow the game's mechanics, but no official Exploding Kittens art or branding is used.
