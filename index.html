@@ -1752,7 +1752,7 @@ const P2P = (() => {
   }
   function endRelays() {
     clearInterval(relayTimer); relayTimer = 0;
-    for (const cl of relays) { try { cl.end(true); } catch (e) {} }
+    for (const cl of relays) { try { cl.end(false); } catch (e) {} }
     relays = []; rconns.clear(); relaySelf = null;
   }
   async function hostRelay(code) {
@@ -1767,18 +1767,25 @@ const P2P = (() => {
         let m; try { m = JSON.parse(String(buf)); } catch (e) { return; }
         const id = 'r:' + String(m.from || '').slice(0, 40); if (id === 'r:') return;
         let c = rconns.get(id);
+        const adopt = () => {
+          const nc = fakeConn(id, {uid: String(m.uid || ''), pid: m.pid || null}, msg => { if (nc.open) cl.publish(`${T}/c/${m.from}`, JSON.stringify(msg)); });
+          rconns.set(id, nc); acceptConn(nc); nc.emit('open'); return nc;
+        };
         if (m.t === 'hello') {
           if (c) { c.last = Date.now(); c.send({k: 'sync', entries: [...store.entries()]}); return; }
-          c = fakeConn(id, {uid: String(m.uid || ''), pid: m.pid || null}, msg => { if (c.open) cl.publish(`${T}/c/${m.from}`, JSON.stringify(msg)); });
-          rconns.set(id, c); acceptConn(c); c.emit('open');
-        } else if (!c) return;
+          c = adopt();
+        } else if (!c) { if ((m.t === 'd' || m.t === 'ping') && m.uid) c = adopt(); else return; }
         else if (m.t === 'd') { c.last = Date.now(); c.emit('data', m.m); }
         else if (m.t === 'ping') c.last = Date.now();
         else if (m.t === 'bye') dropRelay(c);
       });
     }));
     clearInterval(relayTimer);
+    let lastTick = Date.now();
     relayTimer = setInterval(() => {
+      const now = Date.now();
+      if (now - lastTick > 12000) for (const c of rconns.values()) c.last = now;
+      lastTick = now;
       for (const cl of relays) cl.publish(T + '/b', JSON.stringify({t: 'ping'}));
       for (const c of [...rconns.values()]) if (Date.now() - c.last > 20000) dropRelay(c);
     }, 5000);
@@ -1792,21 +1799,26 @@ const P2P = (() => {
       const got = await new Promise(res => {
         let synced = false, lastHost = Date.now();
         const hello = () => cl.publish(T + '/h', JSON.stringify({t: 'hello', from: me2, uid: me.id, pid: peer && peer.id}));
-        const conn = fakeConn('relay', {}, msg => cl.publish(T + '/h', JSON.stringify({t: 'd', from: me2, m: msg})),
+        const conn = fakeConn('relay', {}, msg => cl.publish(T + '/h', JSON.stringify({t: 'd', from: me2, uid: me.id, pid: peer && peer.id, m: msg})),
           () => { try { cl.publish(T + '/h', JSON.stringify({t: 'bye', from: me2})); } catch (e) {} cl.end(); });
         cl.subscribe([`${T}/c/${me2}`, T + '/b']);
         cl.on('message', (tp, buf) => {
           let m; try { m = JSON.parse(String(buf)); } catch (e) { return; }
-          if (tp === T + '/b') { lastHost = Date.now(); if (m.t === 'bye' && synced) lost(); return; }
+          if (tp === T + '/b') { if (m.t === 'ping') lastHost = Date.now(); else if (m.t === 'bye' && m.final && synced) lost(); return; }
           if (m.k === 'sync' && !synced) { synced = true; clearInterval(retry); relays.push(cl); relaySelf = conn; res(conn); }
           if (synced) onData(m);
         });
         const lost = () => { if (!conn.open) return; conn.open = false; clearInterval(beat); if (relaySelf === conn) onClose(conn); };
         const retry = setInterval(hello, 2000); hello();
+        let lastTick = Date.now();
         const beat = setInterval(() => {
+          const now = Date.now();
+          if (now - lastTick > 12000) lastHost = now;
+          lastTick = now;
           if (!synced) return;
-          if (Date.now() - lastHost > 20000) return lost();
-          cl.publish(T + '/h', JSON.stringify({t: 'ping', from: me2}));
+          if (now - lastHost > 90000) return lost();
+          if (now - lastHost > 12000 && view.screen === 'game') setHint('The host went quiet (their screen may be off). Waiting for them to come back…');
+          cl.publish(T + '/h', JSON.stringify({t: 'ping', from: me2, uid: me.id, pid: peer && peer.id}));
         }, 5000);
         setTimeout(() => { if (!synced) { clearInterval(retry); clearInterval(beat); cl.end(true); res(null); } }, 8000);
       });
@@ -1832,6 +1844,7 @@ const P2P = (() => {
   }
   const peerId = code => 'kitten-summon-arena-' + code;
   function reset() {
+    if (hosting && hostCode) for (const cl of relays) { try { cl.publish(topic(hostCode) + '/b', JSON.stringify({t: 'bye', final: true})); } catch (e) {} }
     const p = peer; peer = null; hosting = false; hostCode = null; peerMapV = {};
     if (relaySelf) { const r = relaySelf; relaySelf = null; try { r.close(); } catch (e) {} }
     hostConn = null; endRelays();
@@ -1843,7 +1856,7 @@ const P2P = (() => {
     const opts = await peerOpts();
     await new Promise((res, rej) => {
       const p = peer = new Peer(peerId(code), opts);
-      p.on('open', () => { hosting = true; hostCode = code; onlineIds = new Set([me.id]); res(); });
+      p.on('open', () => { if (hosting) { sharePresence(); return; } hosting = true; hostCode = code; onlineIds = new Set([me.id]); res(); });
       p.on('error', e => { if (!hosting) rej(e); else console.warn('peer error', e.type); });
       p.on('disconnected', () => { if (peer === p) { try { p.reconnect(); } catch (e) {} } });
       p.on('call', c => { if (onCallFn) onCallFn(c); });
@@ -1860,7 +1873,21 @@ const P2P = (() => {
       else if (m.k === 'op' && m.op) apply(m.op);
       else if (m.k === 'presence') { onlineIds = new Set(m.ids); peerMapV = m.peers || {}; renderLobby(); Voice.sync(); }
     };
-    const onClose = c => { if (hostConn === c) { hostConn = null; if (onLost) onLost(); } };
+    // A dropped direct link (e.g. the host's phone slept) moves over to the relay instead of ending the game.
+    const onClose = async c => {
+      if (hostConn !== c) return;
+      hostConn = null;
+      if (c.peer !== 'relay' && peer) {
+        const until = Date.now() + 90000;
+        while (Date.now() < until && peer && !hostConn) {
+          if (view.screen === 'game') setHint('Lost the direct link to the host. Reconnecting…');
+          const r = await joinRelay(code, onData, onClose).catch(() => null);
+          if (r) { if (peer) { hostConn = r; return; } r.close(); }
+        }
+        if (hostConn || !peer) return;
+      }
+      if (onLost) onLost();
+    };
     // 1) Try a direct connection (fast; works on the same Wi-Fi and on friendly networks).
     const direct = await new Promise(res => {
       let settled = false;
@@ -2076,6 +2103,16 @@ setInterval(() => Voice.tick(), 120);
 /* ======================= Lobby screens ======================= */
 let lobbies = [];
 const lobby = {code: null, data: null, unsub: null, unsubMembers: null, members: [], hosting: false, gameUnsub: null, syncing: Promise.resolve()};
+// Keep the screen awake during a game: a sleeping phone pauses the page, and the host's page runs the game for everyone.
+let wakeLock = null;
+async function syncWakeLock() {
+  const want = view.screen === 'game' && !document.hidden;
+  try {
+    if (want && !wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    else if (!want && wakeLock) { const w = wakeLock; wakeLock = null; await w.release(); }
+  } catch (e) { wakeLock = null; }
+}
+document.addEventListener('visibilitychange', syncWakeLock);
 function showScreen(name) {
   $('#home').hidden = name !== 'home';
   $('#lobbyPanel').hidden = name !== 'lobby';
@@ -2083,7 +2120,7 @@ function showScreen(name) {
   $('#hud').hidden = !game; $('#bar').hidden = !game || view.mySeat < 0; $('#deckLbl').hidden = !game; $('#discLbl').hidden = !game; $('#labels').hidden = !game;
   if (!game) { $('#react').hidden = true; $('#takeover').hidden = true; }
   view.screen = name;
-  Sfx.music(game ? 'game' : 'lobby');
+  Sfx.music(game ? 'game' : 'lobby'); syncWakeLock();
 }
 function renderHome() {
   const note = $('#netNote');
@@ -2333,7 +2370,7 @@ function waitInput(seat, kind, data, ms, fallback) {
     G.prompt = {id, seat, kind, ...data, afterSeq: G.seq};
     const w = {id, seat, kind, done: false, res: v => { if (w.done) return; w.done = true; clearTimeout(w.timer); waiters.splice(waiters.indexOf(w), 1); if (G && G.prompt && G.prompt.id === id) G.prompt = null; res(v); }};
     waiters.push(w);
-    w.timer = setTimeout(() => w.res(fallback()), isOnlineSeat(seat) ? ms : 2500);
+    w.timer = setTimeout(() => w.res(fallback()), isOnlineSeat(seat) ? ms : G.online ? Math.min(ms, 15000) : 2500);
     publish();
   });
 }
@@ -3618,7 +3655,7 @@ function updateBar() {
   if (hintOverride) h = hintOverride;
   else if (!sn) h = '';
   else if (sn.status === 'over') h = 'Round over.';
-  else if (M && !M.alive[view.mySeat]) h = 'You exploded. Watching the rest of the round.';
+  else if (M && !M.alive[view.mySeat]) h = G && G.online ? 'You exploded. You are the host, so keep this tab open until the round ends or the game stops for everyone.' : 'You exploded. Watching the rest of the round.';
   else if (mine) h = v.msg;
   else if (M && M.cur === view.mySeat) h = 'Waiting for the table…';
   else h = M ? `Waiting for ${nm(M.cur)}…` : '';
