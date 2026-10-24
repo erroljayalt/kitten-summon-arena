@@ -86,6 +86,19 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .lbl i{font-style:normal;font-size:10px;letter-spacing:.1em;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px}
 .lbl em{font-style:normal;font-size:11px;font-weight:700;color:#0b0918;background:#ff9a4a;border-radius:999px;padding:1px 7px}
 .lbl.active{border-color:var(--holo);box-shadow:0 0 18px -4px var(--holo)}
+.lbl.targeted{border-color:var(--danger);box-shadow:0 0 0 2px var(--danger),0 0 22px -2px var(--danger);animation:tgtPulse .8s ease-in-out infinite alternate}
+.lbl .tgt{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--danger);border-radius:6px;padding:1px 6px}
+@keyframes tgtPulse{to{box-shadow:0 0 0 3px var(--danger),0 0 30px 2px var(--danger)}}
+#targetAlert{position:fixed;inset:0;pointer-events:none;z-index:16;box-shadow:inset 0 0 90px 18px rgba(255,77,109,.55)}
+#targetAlert.go{animation:tgtEdge .9s ease-in-out 3 alternate}
+@keyframes tgtEdge{from{box-shadow:inset 0 0 40px 6px rgba(255,77,109,.25)}to{box-shadow:inset 0 0 110px 26px rgba(255,77,109,.7)}}
+#targetText{position:absolute;left:50%;top:30%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;text-align:center;
+  background:rgba(40,8,20,.9);border:2px solid var(--danger);border-radius:14px;padding:10px 18px;font-size:clamp(15px,2.4vw,20px);font-weight:600;color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#targetText b{color:#ffb3c1}
+#targetText small{display:block;margin-top:4px;font-size:13px;font-weight:500;color:#ffd6de}
+#react.me-target{border-width:2px;box-shadow:0 0 0 3px rgba(255,77,109,.35),0 0 34px -4px var(--danger);animation:tgtPulse .8s ease-in-out infinite alternate}
+#react.me-target #reactText{font-weight:700;color:#fff}
+@media (prefers-reduced-motion:reduce){.lbl.targeted,#targetAlert.go,#react.me-target{animation:none}}
 .lbl.out{opacity:.55}
 .lbl.out b{text-decoration:line-through}
 .lbl.deck{font-family:var(--f-display);font-size:11px;letter-spacing:.06em}
@@ -425,6 +438,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
   </div>
 </div>
 <div id="flash"></div>
+<div id="targetAlert" hidden role="alert"><div id="targetText"></div></div>
 <canvas id="confetti" hidden></canvas>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -2610,9 +2624,10 @@ async function doActionG(s, cards, o = {}) {
   } else target = null;
   removeCards(s, cards); G.top = raw;
   if (raw === 'suncat') G.shrine.sun = true;
-  await emitEv({k: 'play', p: s, cards, n, target, named, as: n === 1 && raw !== type ? type : undefined}, 1600);
+  const victim = n >= 2 || TARGETED.includes(type) ? target : ['attack', 'haunted'].includes(type) ? nextAliveG(s) : null;
+  await emitEv({k: 'play', p: s, cards, n, target, named, victim, as: n === 1 && raw !== type ? type : undefined}, 1600);
   if (!(await sneakyCheck(s))) return {k: 'dead'};
-  if (raw !== 'howl' && await nopeChain({actor: s, type: n > 1 ? 'combo' : type, cardType: n > 1 ? raw : type, target, n})) return null;
+  if (raw !== 'howl' && await nopeChain({actor: s, type: n > 1 ? 'combo' : type, cardType: n > 1 ? raw : type, target, victim, n})) return null;
   if (n >= 2) {
     if (await towerBlock(target, s)) return null;
     if (n === 2) await transferG(target, s, anyOf(G.hands[target]), 'steal');
@@ -2902,7 +2917,7 @@ async function thirdEyeG(hider, idx) {
 function botWantsNope(b, ctx, cancelled) {
   if (!cancelled) {
     if (ctx.actor === b) return false;
-    if (ctx.target === b) return Math.random() < .6;
+    if (ctx.target === b || ctx.victim === b) return Math.random() < .6;
     if (['attack', 'haunted'].includes(ctx.type) && nextAliveG(ctx.actor) === b) return Math.random() < .55;
     return Math.random() < .07;
   }
@@ -2924,7 +2939,7 @@ function nopeWindow(last, ctx, cancelled) {
     nopeWait = {id, eligible: humans, now, fire};
     for (const b of eligible) if (!humans.includes(b) && botWantsNope(b, ctx, cancelled)) timers.push(setTimeout(() => fire(b), 600 + Math.random() * (ms - 750)));
     timers.push(setTimeout(() => fire(null), ms));
-    if (anyHuman) { G.nope = {id, eligible: humans, now, ms, cancelled, actor: ctx.actor, cardType: ctx.cardType, n: ctx.n, afterSeq: G.seq}; publish(); }
+    if (anyHuman) { G.nope = {id, eligible: humans, now, ms, cancelled, actor: ctx.actor, cardType: ctx.cardType, n: ctx.n, victim: ctx.victim, afterSeq: G.seq}; publish(); }
   });
 }
 async function nowPlayG(p, id, target) {
@@ -3103,7 +3118,7 @@ function clearTable() {
   scene.children.filter(o => o.userData.isCard).forEach(o => scene.remove(o));
   [...handGroup.children].forEach(o => handGroup.remove(o));
   view.seatObjs.forEach(o => { if (o) { scene.remove(o.group); scene.remove(o.fan); } });
-  view.seatObjs = []; view.hand = []; view.handoff.clear(); discardMeshes = []; discardTypes = []; updateDiscardLbl(); closeDiscard(); view.boomMesh = null;
+  view.seatObjs = []; view.hand = []; view.handoff.clear(); view.target = null; $('#targetAlert').hidden = true; discardMeshes = []; discardTypes = []; updateDiscardLbl(); closeDiscard(); view.boomMesh = null;
   dismissHolo(); danger = false; padTarget.set('#62f0ff'); $('#tag').innerHTML = ''; $('#labels').innerHTML = '';
   setDeckHeight(46);
 }
@@ -3421,6 +3436,7 @@ async function animEvent(e) {
     }
     case 'play': {
       const t0 = e.cards[0].t;
+      if (e.victim != null && !e.defuse) markTarget(e.victim, e.p, e.n > 1 ? `a ${e.n === 2 ? 'pair' : 'triple'} of ${tname(t0)}` : tname(e.as || t0));
       const fx = e.defuse ? (t0 === 'undead' ? 'RISE AGAIN!' : 'DEFUSED!') : e.n === 2 ? 'PAIR · STEAL' : e.n === 3 ? 'TRIPLE · NAME IT' : e.as ? `AS ${tname(e.as).toUpperCase()}` : null;
       await playAnim(e.p, e.cards, fx); if (e.defuse) danger = false; break;
     }
@@ -3567,7 +3583,9 @@ function updatePromptUI() {
   if (nw && (nw.eligible.includes(view.mySeat) || myNow.length) && view.reactId !== nw.id && view.lastSeq >= nw.afterSeq) {
     view.reactId = nw.id; Sfx.alert();
     const canNope = nw.eligible.includes(view.mySeat), what = nw.n > 1 ? 'combo' : tname(nw.cardType);
-    $('#reactText').textContent = canNope ? (nw.cancelled ? `${nmPos(nw.actor)} ${what} was Noped. Nope the Nope?` : `Nope ${nmPos(nw.actor)} ${what}?`) : `${nm(nw.actor)} played ${what}. Play a card now?`;
+    const atMe = nw.victim === view.mySeat && !nw.cancelled;
+    $('#reactText').textContent = canNope ? (nw.cancelled ? `${nmPos(nw.actor)} ${what} was Noped. Nope the Nope?` : atMe ? `${nm(nw.actor)} is targeting YOU with ${what}! Nope it?` : `Nope ${nmPos(nw.actor)} ${what}?`) : `${nm(nw.actor)} played ${what}. Play a card now?`;
+    $('#react').classList.toggle('me-target', atMe);
     $('#nopeBtn').hidden = !canNope;
     $('#nowBtns').innerHTML = myNow.map(c => `<button class="btn sm" data-now="${c.i}" data-t="${c.t}">${esc(tname(c.t))}</button>`).join('');
     const bar = $('#reactBar'); bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)'; $('#react').hidden = false;
@@ -3578,7 +3596,17 @@ function updatePromptUI() {
   if (!nw && !$('#react').hidden) hideReact();
   updateBar();
 }
-function hideReact() { $('#react').hidden = true; view.hand.forEach(h => h.callout = false); }
+function hideReact() { $('#react').hidden = true; $('#react').classList.remove('me-target'); view.hand.forEach(h => h.callout = false); }
+// Who is being targeted right now: a red glow on their name tag, and a full alert when it is you.
+function markTarget(seat, actor, what) {
+  view.target = {seat, until: Date.now() + 6500};
+  if (seat !== view.mySeat) return;
+  const hasNope = view.hand.some(h => h.type === 'nope') && !view.handBlind;
+  $('#targetText').innerHTML = `<b>${esc(nm(actor))}</b> is targeting <b>you</b> with ${esc(what)}!` + (hasNope ? '<small>Tap Nope to stop it.</small>' : '');
+  const el = $('#targetAlert'); el.hidden = false; el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+  Sfx.alert();
+  clearTimeout(view.targetTimer); view.targetTimer = setTimeout(() => { el.hidden = true; }, 5200);
+}
 function fireNope() {
   const sn = view.snap; if (!sn || !sn.nope || view.reactId !== sn.nope.id) return;
   sendIntent({k: 'nope', w: sn.nope.id}); hideReact();
@@ -3817,9 +3845,10 @@ function renderLabels() {
     const st = sn.seats[s], act = sn.status === 'playing' && M.cur === s && M.alive[s];
     const away = st.kind === 'human' && sn.online && !isUserOnline(st.uid);
     const count = M.alive[s] ? M.hands[s].length + ' cards' : M.hands[s].length ? `Ghost · ${M.hands[s].length} cards` : 'Exploded';
-    const html = `<b>${esc(st.nick)}</b>${Voice.isLive(st.uid) ? `<span class="micdot">${ICON_MIC_SM}</span>` : ''}${st.kind === 'bot' ? '<i>BOT</i>' : away ? '<i>AWAY</i>' : ''}<span>${count}</span>${act && M.tl > 1 ? `<em>${M.tl} turns</em>` : ''}${seatBadges(s, M)}`;
+    const tgt = !!(view.target && view.target.seat === s && view.target.until > Date.now() && M.alive[s]);
+    const html = `<b>${esc(st.nick)}</b>${Voice.isLive(st.uid) ? `<span class="micdot">${ICON_MIC_SM}</span>` : ''}${st.kind === 'bot' ? '<i>BOT</i>' : away ? '<i>AWAY</i>' : ''}<span>${count}</span>${act && M.tl > 1 ? `<em>${M.tl} turns</em>` : ''}${seatBadges(s, M)}${tgt ? '<span class="tgt">Target</span>' : ''}`;
     if (o.lbl._h !== html) { o.lbl.innerHTML = html; o.lbl._h = html; }
-    o.lbl.classList.toggle('active', !!act); o.lbl.classList.toggle('out', !M.alive[s]);
+    o.lbl.classList.toggle('active', !!act); o.lbl.classList.toggle('targeted', tgt); o.lbl.classList.toggle('out', !M.alive[s]);
     o.ring.material.opacity = act ? .55 + Math.sin(clock.elapsedTime * 5) * .3 : 0;
   });
   place($('#deckLbl'), DECK_POS.clone().setZ(DECK_POS.z + 1.0), '-50%', '0%');
