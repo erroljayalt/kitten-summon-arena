@@ -1695,76 +1695,194 @@ const P2P = (() => {
   function sharePresence() {
     onlineIds = new Set([me.id, ...uidOf.values()]);
     peerMapV = {[me.id]: peer && peer.id};
-    for (const [pid, uid] of uidOf) if (uid) peerMapV[uid] = pid;
+    for (const [pid, uid] of uidOf) { const c = conns.get(pid); if (uid) peerMapV[uid] = (c && c.metadata && c.metadata.pid) || pid; }
     broadcast({k: 'presence', ids: [...onlineIds], peers: peerMapV});
     renderLobby(); Voice.sync();
   }
-  function loadLib() {
-    if (window.Peer) return Promise.resolve();
+  function loadScript(src, test) {
+    if (test()) return Promise.resolve();
     return new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js';
+      const s = document.createElement('script'); s.src = src;
       s.onload = res; s.onerror = () => rej(new Error('Could not load the multiplayer library. Check your connection.'));
       document.head.appendChild(s);
     });
   }
+  const loadLib = () => loadScript('https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js', () => !!window.Peer);
+  const loadMqtt = () => loadScript('https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js', () => !!window.mqtt);
+
+  // Relay servers for direct connections (Cloudflare TURN through /api/turn on the website). Without them, players on
+  // strict networks (mobile data, shared ISP addresses) often cannot reach each other directly.
+  let iceCache = null;
+  async function peerOpts() {
+    if (!iceCache || Date.now() - iceCache.at > 6 * 3600e3) {
+      let servers = null;
+      try {
+        const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 3500);
+        const r = await fetch('/api/turn', {cache: 'no-store', signal: ctl.signal}); clearTimeout(t);
+        if (r.ok) {
+          const j = await r.json();
+          servers = [].concat(j.iceServers || []).map(s => ({...s, urls: [].concat(s.urls).filter(u => !/:53(\?|$)/.test(u))})).filter(s => s.urls.length);
+          if (!servers.length) servers = null;
+        }
+      } catch (e) {}
+      iceCache = {at: Date.now(), servers};
+    }
+    return iceCache.servers ? {config: {iceServers: [{urls: 'stun:stun.l.google.com:19302'}, ...iceCache.servers]}} : undefined;
+  }
+
+  // Fallback transport: a public MQTT broker over secure WebSockets. Every browser connects out to it, so it works on any
+  // network. The host listens on all brokers; a guest uses the first one that answers.
+  const BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://test.mosquitto.org:8081/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
+  const topic = code => 'kitten-summon-arena/v1/' + code;
+  const forceRelay = /[?&]relay=1\b/.test(location.search);
+  let relays = [], relayTimer = 0, relaySelf = null;
+  const rconns = new Map();
+  function mqttConnect(url, will) {
+    return new Promise((res, rej) => {
+      const cl = mqtt.connect(url, {clientId: 'ksa_' + Math.random().toString(36).slice(2, 12), clean: true, keepalive: 30, connectTimeout: 6000, reconnectPeriod: 2500, will});
+      const t = setTimeout(() => { cl.end(true); rej(new Error('timeout')); }, 7000);
+      cl.once('connect', () => { clearTimeout(t); res(cl); });
+    });
+  }
+  // Wraps a relay link so it looks like a PeerJS DataConnection to the rest of the code.
+  function fakeConn(id, metadata, sendFn, closeFn) {
+    const h = {};
+    return {peer: id, metadata, open: true, last: Date.now(), send: sendFn, close() { if (closeFn) closeFn(); },
+      on(ev, fn) { (h[ev] = h[ev] || []).push(fn); }, emit(ev, x) { (h[ev] || []).forEach(f => f(x)); }};
+  }
+  function endRelays() {
+    clearInterval(relayTimer); relayTimer = 0;
+    for (const cl of relays) { try { cl.end(true); } catch (e) {} }
+    relays = []; rconns.clear(); relaySelf = null;
+  }
+  async function hostRelay(code) {
+    try { await loadMqtt(); } catch (e) { return; }
+    const T = topic(code);
+    await Promise.all(BROKERS.map(async url => {
+      let cl; try { cl = await mqttConnect(url, {topic: T + '/b', payload: JSON.stringify({t: 'bye'}), qos: 0}); } catch (e) { return; }
+      if (hostCode !== code) { cl.end(true); return; }
+      relays.push(cl);
+      cl.subscribe(T + '/h');
+      cl.on('message', (_, buf) => {
+        let m; try { m = JSON.parse(String(buf)); } catch (e) { return; }
+        const id = 'r:' + String(m.from || '').slice(0, 40); if (id === 'r:') return;
+        let c = rconns.get(id);
+        if (m.t === 'hello') {
+          if (c) { c.last = Date.now(); c.send({k: 'sync', entries: [...store.entries()]}); return; }
+          c = fakeConn(id, {uid: String(m.uid || ''), pid: m.pid || null}, msg => { if (c.open) cl.publish(`${T}/c/${m.from}`, JSON.stringify(msg)); });
+          rconns.set(id, c); acceptConn(c); c.emit('open');
+        } else if (!c) return;
+        else if (m.t === 'd') { c.last = Date.now(); c.emit('data', m.m); }
+        else if (m.t === 'ping') c.last = Date.now();
+        else if (m.t === 'bye') dropRelay(c);
+      });
+    }));
+    clearInterval(relayTimer);
+    relayTimer = setInterval(() => {
+      for (const cl of relays) cl.publish(T + '/b', JSON.stringify({t: 'ping'}));
+      for (const c of [...rconns.values()]) if (Date.now() - c.last > 20000) dropRelay(c);
+    }, 5000);
+  }
+  function dropRelay(c) { if (!c.open) return; c.open = false; rconns.delete(c.peer); c.emit('close'); }
+  async function joinRelay(code, onData, onClose) {
+    await loadMqtt();
+    const T = topic(code), me2 = Math.random().toString(36).slice(2, 12);
+    for (const url of BROKERS) {
+      let cl; try { cl = await mqttConnect(url, {topic: T + '/h', payload: JSON.stringify({t: 'bye', from: me2}), qos: 0}); } catch (e) { continue; }
+      const got = await new Promise(res => {
+        let synced = false, lastHost = Date.now();
+        const hello = () => cl.publish(T + '/h', JSON.stringify({t: 'hello', from: me2, uid: me.id, pid: peer && peer.id}));
+        const conn = fakeConn('relay', {}, msg => cl.publish(T + '/h', JSON.stringify({t: 'd', from: me2, m: msg})),
+          () => { try { cl.publish(T + '/h', JSON.stringify({t: 'bye', from: me2})); } catch (e) {} cl.end(); });
+        cl.subscribe([`${T}/c/${me2}`, T + '/b']);
+        cl.on('message', (tp, buf) => {
+          let m; try { m = JSON.parse(String(buf)); } catch (e) { return; }
+          if (tp === T + '/b') { lastHost = Date.now(); if (m.t === 'bye' && synced) lost(); return; }
+          if (m.k === 'sync' && !synced) { synced = true; clearInterval(retry); relays.push(cl); relaySelf = conn; res(conn); }
+          if (synced) onData(m);
+        });
+        const lost = () => { if (!conn.open) return; conn.open = false; clearInterval(beat); if (relaySelf === conn) onClose(conn); };
+        const retry = setInterval(hello, 2000); hello();
+        const beat = setInterval(() => {
+          if (!synced) return;
+          if (Date.now() - lastHost > 20000) return lost();
+          cl.publish(T + '/h', JSON.stringify({t: 'ping', from: me2}));
+        }, 5000);
+        setTimeout(() => { if (!synced) { clearInterval(retry); clearInterval(beat); cl.end(true); res(null); } }, 8000);
+      });
+      if (got) return got;
+    }
+    return null;
+  }
+
+  function acceptConn(c) {
+    c.on('open', () => {
+      conns.set(c.peer, c); uidOf.set(c.peer, String((c.metadata || {}).uid || ''));
+      c.send({k: 'sync', entries: [...store.entries()]});
+      sharePresence();
+    });
+    c.on('data', m => { if (m && m.k === 'op' && allowed(m.op, uidOf.get(c.peer))) hostApply(m.op); });
+    c.on('close', () => {
+      const uid = uidOf.get(c.peer);
+      conns.delete(c.peer); uidOf.delete(c.peer);
+      const L = store.get('lobbies/' + hostCode), mp = `lobbies/${hostCode}/members/${uid}`;
+      if (uid && store.has(mp) && (!L || L.status !== 'playing')) hostApply({t: 'del', p: mp});
+      sharePresence();
+    });
+  }
   const peerId = code => 'kitten-summon-arena-' + code;
   function reset() {
-    const p = peer; peer = null; hosting = false; hostConn = null; hostCode = null; peerMapV = {};
+    const p = peer; peer = null; hosting = false; hostCode = null; peerMapV = {};
+    if (relaySelf) { const r = relaySelf; relaySelf = null; try { r.close(); } catch (e) {} }
+    hostConn = null; endRelays();
     conns.clear(); uidOf.clear(); store.clear();
     if (p) { try { p.destroy(); } catch (e) {} }
   }
   async function host(code) {
     await loadLib(); reset();
-    return new Promise((res, rej) => {
-      const p = peer = new Peer(peerId(code));
+    const opts = await peerOpts();
+    await new Promise((res, rej) => {
+      const p = peer = new Peer(peerId(code), opts);
       p.on('open', () => { hosting = true; hostCode = code; onlineIds = new Set([me.id]); res(); });
       p.on('error', e => { if (!hosting) rej(e); else console.warn('peer error', e.type); });
       p.on('disconnected', () => { if (peer === p) { try { p.reconnect(); } catch (e) {} } });
       p.on('call', c => { if (onCallFn) onCallFn(c); });
-      p.on('connection', c => {
-        c.on('open', () => {
-          conns.set(c.peer, c); uidOf.set(c.peer, String((c.metadata || {}).uid || ''));
-          c.send({k: 'sync', entries: [...store.entries()]});
-          sharePresence();
-        });
-        c.on('data', m => { if (m && m.k === 'op' && allowed(m.op, uidOf.get(c.peer))) hostApply(m.op); });
-        c.on('close', () => {
-          const uid = uidOf.get(c.peer);
-          conns.delete(c.peer); uidOf.delete(c.peer);
-          const L = store.get('lobbies/' + hostCode), mp = `lobbies/${hostCode}/members/${uid}`;
-          if (uid && store.has(mp) && (!L || L.status !== 'playing')) hostApply({t: 'del', p: mp});
-          sharePresence();
-        });
-      });
+      p.on('connection', acceptConn);
     });
+    hostRelay(code);
   }
   async function join(code) {
     await loadLib(); reset();
-    return new Promise((res, rej) => {
-      let done = false;
-      const fail = msg => { if (done) return; done = true; clearTimeout(timer); reset(); rej(new Error(msg)); };
-      const timer = setTimeout(() => fail('Could not reach that lobby. Check the code and try again.'), 15000);
-      const p = peer = new Peer();
+    const opts = await peerOpts();
+    const onData = m => {
+      if (!m) return;
+      if (m.k === 'sync') { store.clear(); for (const [path, d] of m.entries) store.set(path, d); for (const path of [...store.keys()]) notify(path); }
+      else if (m.k === 'op' && m.op) apply(m.op);
+      else if (m.k === 'presence') { onlineIds = new Set(m.ids); peerMapV = m.peers || {}; renderLobby(); Voice.sync(); }
+    };
+    const onClose = c => { if (hostConn === c) { hostConn = null; if (onLost) onLost(); } };
+    // 1) Try a direct connection (fast; works on the same Wi-Fi and on friendly networks).
+    const direct = await new Promise(res => {
+      let settled = false;
+      const done = v => { if (settled) return; settled = true; clearTimeout(timer); res(v); };
+      const timer = setTimeout(() => done(null), forceRelay ? 0 : 7000);
+      let p; try { p = peer = new Peer(opts); } catch (e) { return done(null); }
       p.on('call', c => { if (onCallFn) onCallFn(c); });
-      p.on('error', e => {
-        if (e.type === 'peer-unavailable') fail(`No lobby with code ${code.toUpperCase()} is open right now.`);
-        else if (!done) fail('Could not connect (' + (e.type || 'network') + '). Try again.');
-      });
+      p.on('error', e => { if (!settled) done(e.type === 'peer-unavailable' ? 'missing' : null); });
       p.on('open', () => {
-        const c = hostConn = p.connect(peerId(code), {metadata: {uid: me.id}, reliable: true});
-        c.on('data', m => {
-          if (!m) return;
-          if (m.k === 'sync') {
-            store.clear(); for (const [path, d] of m.entries) store.set(path, d);
-            if (!done) { done = true; clearTimeout(timer); res(); }
-            for (const path of [...store.keys()]) notify(path);
-          } else if (m.k === 'op' && m.op) apply(m.op);
-          else if (m.k === 'presence') { onlineIds = new Set(m.ids); peerMapV = m.peers || {}; renderLobby(); Voice.sync(); }
-        });
-        c.on('close', () => { if (hostConn === c) { hostConn = null; if (onLost) onLost(); } });
+        if (forceRelay) return;
+        const c = p.connect(peerId(code), {metadata: {uid: me.id}, reliable: true});
+        c.on('data', m => { if (m && m.k === 'sync' && !settled) { hostConn = c; done(c); } if (hostConn === c) onData(m); });
+        c.on('close', () => onClose(c));
+        c.on('error', () => { if (!settled) done(null); });
       });
     });
+    if (direct && direct !== 'missing') return;
+    // 2) Fall back to the relay (works through any network).
+    const relayed = await joinRelay(code, onData, onClose).catch(() => null);
+    if (relayed) { hostConn = relayed; return; }
+    const msg = direct === 'missing' ? `No lobby with code ${code.toUpperCase()} is open right now.` : 'Could not reach that lobby. Check the code and try again.';
+    reset(); throw new Error(msg);
   }
   const db = {
     doc(p) {
