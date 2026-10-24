@@ -202,6 +202,21 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .lbl .micdot{display:inline-flex;color:var(--ok)}
 .lbl.speaking{box-shadow:0 0 0 2px var(--ok),0 0 16px -2px var(--ok)}
 @media (max-width:640px){.chat{left:10px;right:10px;width:auto;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);max-height:62vh}}
+.disc-lbl{color:var(--fg);cursor:pointer;pointer-events:auto;font:inherit;font-family:var(--f-display);font-size:11px;letter-spacing:.06em}
+.disc-lbl:hover{border-color:var(--holo)}
+.disc-lbl:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
+#disc{position:fixed;inset:0;display:grid;place-items:center;background:rgba(6,5,14,.72);z-index:25;padding:16px;box-sizing:border-box}
+.disc-sheet{width:min(560px,100%)}
+.disc-top{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:18px;align-items:center;margin:0}
+.disc-top img{width:100%;border-radius:12px;display:block;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.disc-top h3{margin:4px 0 6px;font-family:var(--f-display);font-weight:400;font-size:1.3rem}
+.disc-top .kind{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.disc-top p{margin:0;line-height:1.45;color:#dcd9f6;font-size:14px}
+.disc-sub{margin:18px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
+.disc-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px}
+.disc-list li{display:grid;gap:4px;font-size:11px;color:#dcd9f6;text-align:center;line-height:1.2}
+.disc-list img{width:100%;border-radius:6px;display:block}
+@media (max-width:480px){.disc-top{grid-template-columns:1fr;justify-items:center;text-align:center}.disc-top img{width:min(200px,70vw)}}
 #guide{position:fixed;inset:0;display:grid;place-items:center;background:rgba(6,5,14,.72);z-index:25;padding:16px;box-sizing:border-box}
 .guide-sheet{width:min(780px,100%);max-height:88vh;display:flex;flex-direction:column;background:#141030;border:1px solid var(--line);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden}
 .guide-head{display:flex;align-items:center;gap:12px;padding:16px 18px 0}
@@ -296,6 +311,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
   </div>
   <div id="labels"></div>
   <div class="lbl deck" id="deckLbl" hidden>Draw pile</div>
+  <button class="lbl deck disc-lbl" id="discLbl" type="button" hidden>Discard pile</button>
   <div id="tag"></div>
   <div id="fx"></div>
   <div id="banner"></div>
@@ -387,6 +403,12 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
   <div class="chat-quick" id="chatQuick"></div>
   <form class="chat-form" id="chatForm"><input id="chatInput" maxlength="200" autocomplete="off" placeholder="Say something to the table" aria-label="Chat message"><button class="btn sm" type="submit">Send</button></form>
 </section>
+<div id="disc" hidden>
+  <div class="guide-sheet disc-sheet" role="dialog" aria-modal="true" aria-labelledby="discTitle">
+    <div class="guide-head"><h2 id="discTitle">Latest discard</h2><button class="guide-close" id="discClose" aria-label="Close the discard pile">×</button></div>
+    <div class="guide-body" id="discBody"></div>
+  </div>
+</div>
 <div id="guide" hidden>
   <div class="guide-sheet" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
     <div class="guide-head"><h2 id="guideTitle">Card guide</h2><button class="guide-close" id="guideClose" aria-label="Close the card guide">×</button></div>
@@ -1666,7 +1688,7 @@ const deckSide = new THREE.MeshStandardMaterial({color: '#d9d3f5', roughness: .8
 const deck = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1.4), [deckSide, deckSide, new THREE.MeshBasicMaterial({map: backTex}), deckSide, deckSide, deckSide]);
 deck.position.copy(DECK_POS); scene.add(deck);
 const deckTop = () => new V3(deck.position.x, deck.scale.y + .03, deck.position.z);
-let discardMeshes = [];
+let discardMeshes = [], discardTypes = [];
 function setDeckHeight(n) { const h = Math.max(.02, n * .014); deck.scale.y = h; deck.position.y = h / 2; deck.visible = n > 0; }
 setDeckHeight(46);
 
@@ -2552,7 +2574,7 @@ function showScreen(name) {
   $('#home').hidden = name !== 'home';
   $('#lobbyPanel').hidden = name !== 'lobby';
   const game = name === 'game';
-  $('#hud').hidden = !game; $('#bar').hidden = !game || view.mySeat < 0; $('#deckLbl').hidden = !game; $('#labels').hidden = !game;
+  $('#hud').hidden = !game; $('#bar').hidden = !game || view.mySeat < 0; $('#deckLbl').hidden = !game; $('#discLbl').hidden = !game; $('#labels').hidden = !game;
   if (!game) { $('#react').hidden = true; $('#takeover').hidden = true; }
   view.screen = name;
   Sfx.music(game ? 'game' : 'lobby');
@@ -3536,7 +3558,7 @@ function clearTable() {
   scene.children.filter(o => o.userData.isCard).forEach(o => scene.remove(o));
   [...handGroup.children].forEach(o => handGroup.remove(o));
   view.seatObjs.forEach(o => { if (o) { scene.remove(o.group); scene.remove(o.fan); } });
-  view.seatObjs = []; view.hand = []; view.handoff.clear(); discardMeshes = []; view.boomMesh = null;
+  view.seatObjs = []; view.hand = []; view.handoff.clear(); discardMeshes = []; discardTypes = []; updateDiscardLbl(); closeDiscard(); view.boomMesh = null;
   dismissHolo(); danger = false; padTarget.set('#62f0ff'); $('#tag').innerHTML = ''; $('#labels').innerHTML = '';
   setDeckHeight(46);
 }
@@ -3715,13 +3737,31 @@ function cardFrom(s, card, faceUp) {
   if (s !== view.mySeat) { view.fanN[s]--; updateFan(s); }
   return m;
 }
+const DISCARD_KEEP = 10, discardY = i => .02 + i * .012;
+function typeOfMesh(m) { const mat = m.userData.front && m.userData.front.material; return Object.keys(faceMat).find(t => faceMat[t] === mat) || null; }
 async function toDiscard(m) {
-  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, (Math.random() - .5) * .7));
-  const y = .02 + Math.min(discardMeshes.length, 16) * .008;
-  await flyTo(m, new V3(DISCARD_POS.x + (Math.random() - .5) * .2, y, DISCARD_POS.z + (Math.random() - .5) * .2), q, .45, .6);
+  const t = typeOfMesh(m); if (t) { discardTypes.push(t); if (discardTypes.length > 30) discardTypes.shift(); }
   discardMeshes.push(m);
-  if (discardMeshes.length > 16) scene.remove(discardMeshes.shift());
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, (Math.random() - .5) * .22));
+  m.userData.discardSpot = new V3(DISCARD_POS.x + (Math.random() - .5) * .08, 0, DISCARD_POS.z + (Math.random() - .5) * .08);
+  const spot = m.userData.discardSpot.clone(); spot.y = discardY(Math.min(discardMeshes.length - 1, DISCARD_KEEP - 1));
+  await flyTo(m, spot, q, .45, .6);
+  m.userData.landed = true;
+  while (discardMeshes.length > DISCARD_KEEP && discardMeshes[0].userData.landed) scene.remove(discardMeshes.shift());
+  discardMeshes.forEach((d, i) => { if (d.userData.landed) { d.position.set(d.userData.discardSpot.x, discardY(i), d.userData.discardSpot.z); } });
+  updateDiscardLbl();
 }
+function updateDiscardLbl() { const l = $('#discLbl'); l.textContent = discardTypes.length ? 'Discard · tap to view' : 'Discard pile'; }
+function openDiscard() {
+  if (!discardTypes.length) return setHint('The discard pile is empty.');
+  const list = [...discardTypes].reverse(), top = list[0], T = TYPES[top];
+  $('#discBody').innerHTML = `<figure class="disc-top"><img src="${faceURL[top] || ''}" alt="${esc(T.name)}"><figcaption><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><h3>${esc(T.name)}</h3><p>${esc(T.text)}</p></figcaption></figure>` +
+    (list.length > 1 ? `<h4 class="disc-sub">Played before that</h4><ol class="disc-list">${list.slice(1, 13).map(t => `<li><img src="${faceURL[t] || ''}" alt=""><span>${esc(TYPES[t].name)}</span></li>`).join('')}</ol>` : '');
+  $('#disc').hidden = false; $('#discClose').focus();
+}
+function closeDiscard() { $('#disc').hidden = true; }
+document.addEventListener('click', e => { if (e.target.id === 'disc' || e.target.closest('#discClose')) closeDiscard(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#disc').hidden) closeDiscard(); });
 async function playAnim(s, cards, fx) {
   const type = cards[0].t, meshes = cards.map(c => cardFrom(s, c, true)), n = meshes.length;
   Sfx.whoosh();
@@ -4117,7 +4157,7 @@ $('#playBtn').addEventListener('click', async () => {
 function doDraw() { const pr = turnPrompt(); if (!pr) return; view.hand.forEach(c => c.selected = false); sendIntent({k: 'draw', p: pr.id}); }
 $('#drawBtn').addEventListener('click', doDraw);
 
-const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(), tablePlane = new THREE.Plane(new V3(0, 1, 0), 0), tableHit = new V3();
 function pick(e) {
   const r = renderer.domElement.getBoundingClientRect();
   ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
@@ -4125,6 +4165,8 @@ function pick(e) {
   const h = ray.intersectObjects(view.hand.map(c => c.mesh.userData.front))[0];
   if (h) return {card: h.object.userData.group.userData.cardRef};
   if (deck.visible && ray.intersectObject(deck)[0]) return {deck: true};
+  if (discardMeshes.length && ray.intersectObjects(discardMeshes, true)[0]) return {discard: true};
+  if (discardTypes.length && ray.ray.intersectPlane(tablePlane, tableHit) && Math.hypot(tableHit.x - DISCARD_POS.x, tableHit.z - DISCARD_POS.z) < .8) return {discard: true};
   return null;
 }
 renderer.domElement.addEventListener('pointermove', e => {
@@ -4136,6 +4178,7 @@ renderer.domElement.addEventListener('click', e => {
   if (view.screen !== 'game') return;
   const h = pick(e); if (!h) return;
   if (h.deck) return doDraw();
+  if (h.discard) { Sfx.flip(); return openDiscard(); }
   const c = h.card;
   if (!$('#react').hidden && c.type === 'nope') return fireNope();
   if (!turnPrompt()) return setHint('Hold on, it is not your turn.');
@@ -4226,6 +4269,7 @@ function renderLabels() {
     o.ring.material.opacity = act ? .55 + Math.sin(clock.elapsedTime * 5) * .3 : 0;
   });
   place($('#deckLbl'), DECK_POS.clone().setZ(DECK_POS.z + 1.0), '-50%', '0%');
+  place($('#discLbl'), DISCARD_POS.clone().setZ(DISCARD_POS.z + 1.0), '-50%', '0%');
 }
 function loop() {
   const dt = Math.min(.05, clock.getDelta()), t = clock.elapsedTime; uTime.value = t;
@@ -4441,6 +4485,7 @@ document.addEventListener('click', e => {
   if (e.target.id === 'guide' || e.target.closest('#guideClose')) closeGuide();
 });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#guide').hidden) closeGuide(); });
+$('#discLbl').addEventListener('click', openDiscard);
 
 /* ======================= Boot ======================= */
 (async function boot() {
