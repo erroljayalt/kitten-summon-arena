@@ -142,7 +142,71 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .panel h1{font-family:var(--f-display);font-weight:400;font-size:1.6rem;margin:0 0 4px;text-wrap:balance}
 .panel h2{font-family:var(--f-display);font-weight:400;font-size:1rem;margin:20px 0 8px;letter-spacing:.03em}
 .panel p{margin:0;color:var(--muted);line-height:1.45}
-@media (min-width:980px){#home{width:min(1120px,calc(100% - 32px));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}#home .home-col+.home-col{border-left:1px solid var(--line);padding-left:28px}#home h2.first{margin-top:4px}}
+#home h2{text-transform:uppercase;letter-spacing:.06em;font-size:.95rem;margin:16px 0 9px}
+#home .sub{margin-top:6px}
+#home h2.first{margin-top:0}
+.profile{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+.prof-left .field{margin-top:0;text-transform:none;letter-spacing:0;font-size:13px}
+.preview-card{position:relative;margin-top:12px;border-radius:18px;border:1px solid var(--line);background:radial-gradient(circle at 50% 60%,#2c2560,#120e2c 75%);overflow:hidden}
+#home .preview{width:100%;height:230px;border:0;border-radius:0;background:none}
+.preview-card .rand{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:7px;white-space:nowrap;background:rgba(14,11,34,.85);font-family:inherit;font-size:13px;font-weight:600;padding:7px 14px}
+.rand svg{width:16px;height:16px}
+#home .swatches{gap:8px}
+#home .sw{width:30px;height:30px}
+.tiles{display:grid;gap:8px}
+.tile{display:grid;justify-items:center;gap:4px;padding:6px 6px 7px;border:1px solid var(--line);border-radius:12px;background:#0e0b22;color:var(--fg);font:inherit;font-size:12px;cursor:pointer;min-width:0}
+.tile img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block;background:radial-gradient(circle at 50% 60%,#2c2560,#120e2c 75%)}
+.tile span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tile[aria-pressed="true"]{border-color:var(--holo);background:color-mix(in srgb,var(--holo) 16%,#0e0b22);box-shadow:0 0 0 1px var(--holo),0 0 18px -6px var(--holo)}
+.tile:hover{border-color:color-mix(in srgb,var(--holo) 60%,var(--line))}
+.tile:focus-visible,.arena-card:focus-visible,.seg button:focus-visible,.itgl:focus-visible,.hw-nav:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
+.pat-tiles{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.pat-tiles .tile{padding:4px 4px 5px;font-size:11px;border-radius:10px}
+.hw-row{display:flex;align-items:stretch;gap:8px}
+.hw-tiles{flex:1;min-width:0;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:84px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding:2px}
+.hw-tiles::-webkit-scrollbar{display:none}
+.hw-nav{flex:none;width:36px;border:1px solid var(--line);border-radius:12px;background:#0e0b22;color:var(--fg);cursor:pointer;display:grid;place-items:center}
+.hw-nav svg{width:18px;height:18px}
+.col-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.home-icons{display:flex;gap:6px}
+.itgl{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:#0e0b22;color:var(--fg);display:grid;place-items:center;cursor:pointer;position:relative}
+.itgl svg{width:18px;height:18px}
+.itgl[aria-pressed="false"]{color:var(--muted)}
+.itgl[aria-pressed="false"]::after{content:"";position:absolute;width:22px;height:2px;background:var(--danger);transform:rotate(-45deg);border-radius:2px}
+.itgl:disabled{opacity:.45;cursor:default}
+.arena-row{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 20px) / 3);gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 6px;scrollbar-width:thin}
+.arena-card{scroll-snap-align:start;display:grid;gap:0;padding:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0e0b22;color:var(--fg);font:inherit;font-size:13px;cursor:pointer;text-align:center}
+.arena-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1a1540}
+.arena-card span{padding:7px 6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arena-card[aria-pressed="true"]{border-color:var(--holo);box-shadow:0 0 0 1px var(--holo),0 0 22px -6px var(--holo)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:#0e0b22}
+.seg button{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:9px 10px;background:transparent;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.seg button i{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;box-sizing:border-box;flex:none}
+.seg button[aria-pressed="true"]{background:var(--holo);color:#0b0918;font-weight:600}
+.seg button[aria-pressed="true"] i{background:#fff;border-color:#fff}
+.actions{display:grid;gap:10px}
+.btn.big{display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;padding:14px 18px;border-radius:14px;width:100%}
+.btn.big svg{width:22px;height:22px}
+.btn.big.light{background:#f4f2ff;color:#1a1426}
+.join-row{display:flex;gap:8px}
+.join-row input{flex:1;min-width:0;font:inherit;font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg);background:#0e0b22;border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+.join-row input::placeholder{letter-spacing:0;text-transform:none;color:var(--muted)}
+.join-row .btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:11px 18px;white-space:nowrap}
+.join-row .btn svg{width:18px;height:18px}
+.home-foot{display:flex;justify-content:center;padding-top:14px;margin-top:14px;border-top:1px solid var(--line)}
+.guide-big{display:inline-flex;align-items:center;gap:10px;background:#ffcf3a;color:#1a1426;font-size:15px;padding:12px 26px;border-radius:14px}
+.guide-big svg{width:20px;height:20px}
+@media (min-width:980px){
+  #home{width:min(1180px,calc(100% - 32px));display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:0 30px;align-items:start}
+  #home .home-col+.home-col{border-left:1px solid var(--line);padding-left:30px}
+  .home-foot{grid-column:1 / -1}
+}
+@media (max-width:520px){
+  .profile{grid-template-columns:1fr}
+  #home .preview{height:220px}
+  .arena-row{grid-auto-columns:42%}
+  .seg button{font-size:12.5px;padding:9px 6px}
+}
 .field{display:grid;gap:6px;margin-top:16px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
 .field input{font:inherit;font-size:16px;text-transform:none;letter-spacing:0;color:var(--fg);background:#0e0b22;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
@@ -359,41 +423,54 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 </div>
 
 <section class="panel" id="home">
-<div class="home-col">
+<div class="home-col" id="custom">
   <h1>Kitten <em>Summon</em> Arena</h1>
-  <p>Every card played is summoned as a hologram in the middle of the table. Open a lobby, let friends join, and fill empty seats with bots.</p>
-  <label class="field" for="nick">Your player name
-    <input id="nick" maxlength="16" autocomplete="nickname" placeholder="e.g. Captain Whiskers">
-  </label>
-  <h2>Your cat</h2>
-  <div class="custom" id="custom">
-    <div class="preview" id="preview" aria-label="Preview of your cat"></div>
-    <div>
+  <p class="sub">Every card played is summoned as a hologram on the table. Create or join a lobby, and play with friends and bots.</p>
+  <h2>Your profile</h2>
+  <div class="profile">
+    <div class="prof-left">
+      <label class="field" for="nick">Your player name
+        <input id="nick" maxlength="16" autocomplete="nickname" placeholder="e.g. Captain Whiskers">
+      </label>
+      <div class="preview-card">
+        <div class="preview" id="preview" aria-label="Preview of your cat"></div>
+        <button class="btn alt sm rand" id="randomLook" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/><circle cx="12" cy="6.5" r="1" fill="currentColor"/><circle cx="7" cy="13" r="1" fill="currentColor"/><circle cx="17" cy="13" r="1" fill="currentColor"/></svg>Randomize avatar</button>
+      </div>
+    </div>
+    <div class="prof-right">
       <div class="pick"><span>Fur</span><div class="swatches" id="furPick"></div></div>
       <div class="pick"><span>Eyes</span><div class="swatches" id="eyePick"></div></div>
-      <div class="pick"><span>Pattern</span><div class="swatches" id="patPick"></div></div>
-      <div class="pick"><span>Headwear</span><div class="swatches" id="accPick"></div></div>
-      <button class="chipsel" id="randomLook">Randomize</button>
+      <div class="pick"><span>Pattern</span><div class="tiles pat-tiles" id="patPick"></div></div>
+    </div>
+  </div>
+  <div class="pick"><span>Headwear</span>
+    <div class="hw-row">
+      <div class="tiles hw-tiles" id="accPick"></div>
+      <button class="hw-nav" id="hwNext" type="button" aria-label="More headwear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
   </div>
 </div>
 <div class="home-col">
-  <h2 class="first">Arena</h2>
-  <div class="swatches" id="stagePick"></div>
-  <h2>Deck</h2>
-  <div class="swatches" id="deckPick"></div>
-  <p class="note">Used for quick play and for lobbies you host. In a lobby, the host's pick is used.</p>
-  <div class="row">
-    <button class="btn" id="createBtn">Create lobby</button>
-    <button class="btn alt" id="soloBtn">Quick play vs 3 bots</button>
-    <button class="btn alt music-toggle" aria-pressed="false">Music on</button>
-    <button class="btn alt ann-toggle" aria-pressed="false">Announcer on</button>
-    <button class="btn alt mute-toggle" aria-pressed="false">Sound on</button>
+  <div class="col-head">
+    <h2 class="first">Arena</h2>
+    <div class="home-icons">
+      <button class="itgl mute-toggle" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
+      <button class="itgl ann-toggle" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg></button>
+      <button class="itgl music-toggle" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="17" cy="16" r="3" fill="currentColor"/></svg></button>
+    </div>
   </div>
-  <p class="note" id="netNote">Connecting to the arena…</p>
+  <div class="arena-row" id="stagePick"></div>
+  <h2>Deck mode</h2>
+  <div class="seg" id="deckPick" role="group" aria-label="Deck mode"></div>
+  <h2>Main actions</h2>
+  <div class="actions">
+    <button class="btn big" id="createBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15c-1.5 1.3-2 4-2 6 2 0 4.7-.5 6-2"/><path d="M9 15l-3-3c1-4 4-8 9-9 2-.4 4 0 6 0 0 2 .4 4 0 6-1 5-5 8-9 9z"/><circle cx="15" cy="9" r="1.8"/></svg>Create lobby</button>
+    <button class="btn big light" id="soloBtn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Quick play vs 3 bots</button>
+  </div>
   <h2 id="lobbiesTitle">Open lobbies</h2>
-  <div class="voice-row" id="joinRow" hidden><input id="joinCode" maxlength="5" autocomplete="off" spellcheck="false" placeholder="Lobby code, e.g. K7Q2M" aria-label="Lobby code"><button class="btn" id="joinBtn">Join</button></div>
+  <div class="join-row" id="joinRow" hidden><input id="joinCode" maxlength="5" autocomplete="off" spellcheck="false" placeholder="Lobby code, e.g. K7Q2M" aria-label="Lobby code"><button class="btn" id="joinBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>Join lobby</button></div>
   <ul class="list" id="lobbyList"><li class="empty">Looking for lobbies…</li></ul>
+  <p class="note" id="netNote">Connecting to the arena…</p>
   <h2>How to play</h2>
   <ul class="rules">
     <li><b>Goal:</b> be the last player who has not exploded.</li>
@@ -402,7 +479,9 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
     <li><b>Nope</b> cancels any action, even on someone else's turn. Tap it when it glows.</li>
     <li><b>Cat cards:</b> a pair steals a random card; three of a kind names the card you want.</li>
   </ul>
-  <div class="row"><button class="btn alt guide-open">Open the card guide</button></div>
+</div>
+<div class="home-foot">
+  <button class="btn guide-big guide-open" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="6" y="3" width="13" height="18" rx="2"/><path d="M3 7v12a2 2 0 0 0 2 2M10 8h5M10 12h5M10 16h3"/></svg>The card guide</button>
 </div>
 </section>
 
@@ -783,7 +862,7 @@ const Announcer = (() => {
 })();
 
 ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => Sfx.unlock(), {passive: true}));
-document.addEventListener('click', e => { if (e.target.closest('.btn,.chipsel,.sw,.chipbtn,.opt')) Sfx.click(); });
+document.addEventListener('click', e => { if (e.target.closest('.btn,.chipsel,.sw,.chipbtn,.opt,.tile,.arena-card,.seg button,.itgl,.hw-nav')) Sfx.click(); });
 const SPK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/>';
 const ICON_SPK_ON = SPK + '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
 const ICON_SPK_OFF = SPK + '<path d="M17 9.5l5 5M22 9.5l-5 5"/></svg>';
@@ -792,6 +871,7 @@ function syncMute() {
   const set = (sel, on, label, title, disabled = false) => document.querySelectorAll(sel).forEach(b => {
     b.disabled = disabled;
     if (b.classList.contains('tgl')) { b.setAttribute('aria-checked', String(on)); return; }
+    if (b.classList.contains('itgl')) { b.setAttribute('aria-pressed', String(on)); b.title = `${label}: ${on ? 'on' : 'off'}`; b.setAttribute('aria-label', `${label} ${on ? 'on' : 'off'}`); return; }
     b.setAttribute('aria-pressed', String(!on)); b.textContent = `${label} ${on ? 'on' : 'off'}`; b.title = title;
   });
   set('.mute-toggle', !Sfx.muted, 'Sound', 'Toggle all sound (M)');
@@ -2156,7 +2236,7 @@ function renderHome() {
     note.textContent = 'Create a lobby and share its code or invite link, or join a friend with their code.';
     note.classList.remove('warn');
     $('#createBtn').disabled = false;
-    $('#lobbyList').hidden = true; $('#joinRow').hidden = false; $('#lobbiesTitle').textContent = 'Join a lobby';
+    $('#lobbyList').hidden = true; $('#joinRow').hidden = false; $('#lobbiesTitle').hidden = true;
     return;
   }
   if (!netReady) note.textContent = 'Connecting to the arena…';
@@ -3942,12 +4022,43 @@ function renderPreview(t) {
   pv.av.rotation.y = Math.sin(t * .8) * .6; pv.av.position.y = .1 + Math.sin(t * 2) * .04;
   pv.r.render(pv.scene, pv.cam);
 }
+// Little rendered pictures of your cat wearing each hat / pattern, for the picker tiles.
+const thumbs = {key: '', acc: {}, pat: {}};
+let thumbR = null;
+function renderThumbs() {
+  const key = [me.look.fur, me.look.eye, me.look.pat, me.look.acc].join('|');
+  if (thumbs.key === key || !pv.scene) return;
+  thumbs.key = key;
+  try {
+    if (!thumbR) { thumbR = new THREE.WebGLRenderer({antialias: true, alpha: true, preserveDrawingBuffer: true}); thumbR.setSize(112, 112, false); thumbR.outputEncoding = THREE.sRGBEncoding; }
+    const cam = new THREE.PerspectiveCamera(30, 1, .1, 50);
+    const shot = (look, head) => {
+      const av = buildAvatar(look); av.rotation.y = .35; pv.scene.add(av);
+      if (head) { cam.position.set(0, .75, 3.7); cam.lookAt(0, .42, 0); } else { cam.position.set(0, .35, 5.2); cam.lookAt(0, -.05, 0); }
+      thumbR.render(pv.scene, cam); const url = thumbR.domElement.toDataURL('image/png');
+      pv.scene.remove(av); av.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+      return url;
+    };
+    if (pv.av) pv.av.visible = false;
+    for (const [k] of ACCS) thumbs.acc[k] = shot({...me.look, acc: k}, true);
+    for (const [k] of PATS) thumbs.pat[k] = shot({...me.look, pat: k, acc: 'none'}, false);
+    if (pv.av) pv.av.visible = true;
+  } catch (e) {}
+}
 function renderPickers() {
+  renderThumbs();
+  const tile = (attr, k, label, on, src) => `<button class="tile" type="button" data-${attr}="${k}" aria-pressed="${on}">${src ? `<img src="${src}" alt="">` : '<img alt="">'}<span>${label}</span></button>`;
   $('#furPick').innerHTML = FURS.map((c, i) => `<button class="sw" style="--c:${c}" data-fur="${c}" aria-label="Fur color ${i + 1}" aria-pressed="${me.look.fur === c}"></button>`).join('');
   $('#eyePick').innerHTML = EYES.map((c, i) => `<button class="sw" style="--c:${c}" data-eye="${c}" aria-label="Eye color ${i + 1}" aria-pressed="${me.look.eye === c}"></button>`).join('');
-  $('#accPick').innerHTML = ACCS.map(([k, l]) => `<button class="chipsel" data-acc="${k}" aria-pressed="${me.look.acc === k}">${l}</button>`).join('');
-  $('#patPick').innerHTML = PATS.map(([k, l]) => `<button class="chipsel" data-pat="${k}" aria-pressed="${me.look.pat === k}">${l}</button>`).join('');
+  const sc = $('#accPick').scrollLeft;
+  $('#accPick').innerHTML = ACCS.map(([k, l]) => tile('acc', k, l, me.look.acc === k, thumbs.acc[k])).join('');
+  $('#accPick').scrollLeft = sc;
+  $('#patPick').innerHTML = PATS.map(([k, l]) => tile('pat', k, l, me.look.pat === k, thumbs.pat[k])).join('');
 }
+$('#hwNext').addEventListener('click', () => {
+  const r = $('#accPick'), end = r.scrollLeft + r.clientWidth >= r.scrollWidth - 4;
+  r.scrollLeft = end ? 0 : r.scrollLeft + r.clientWidth * .8;
+});
 function setLook(patch) {
   me.look = cleanLook({...me.look, ...patch});
   try { localStorage.setItem('ksa-look', JSON.stringify(me.look)); } catch (e) {}
@@ -3956,7 +4067,11 @@ function setLook(patch) {
 function stagePickHTML(sel, disabled) {
   return STAGES.map(([id, label]) => `<button class="chipsel" data-stage="${id}" aria-pressed="${sel === id}"${disabled ? ' disabled' : ''}>${label}</button>`).join('');
 }
-function renderStagePickers() { $('#stagePick').innerHTML = stagePickHTML(me.stage, false); $('#deckPick').innerHTML = deckPickHTML(me.deck, false); }
+const DECK_SEG = [['classic', 'Classic (13 types)'], ['party', 'Party (all 49 types)']];
+function renderStagePickers() {
+  $('#stagePick').innerHTML = STAGES.map(([id, label]) => `<button class="arena-card" type="button" data-stage="${id}" aria-pressed="${me.stage === id}"><img src="stages/${id}.jpg" alt="" loading="lazy"><span>${label}</span></button>`).join('');
+  $('#deckPick').innerHTML = DECK_SEG.map(([id, label]) => `<button type="button" data-deck="${id}" aria-pressed="${me.deck === id}"><i></i>${label}</button>`).join('');
+}
 const DECKS = [['classic', 'Classic · 13 card types'], ['party', 'Party · all 49 card types']];
 function deckPickHTML(sel, disabled) {
   return DECKS.map(([id, label]) => `<button class="chipsel" data-deck="${id}" aria-pressed="${sel === id}"${disabled ? ' disabled' : ''}>${label}</button>`).join('');
@@ -4088,7 +4203,7 @@ $('#discLbl').addEventListener('click', openDiscard);
 (async function boot() {
   resize();
   showScreen('home');
-  renderPickers(); initPreview(); syncMute();
+  initPreview(); renderPickers(); syncMute();
   renderStagePickers(); setStage(me.stage);
   requestAnimationFrame(loop);
   initNet();
