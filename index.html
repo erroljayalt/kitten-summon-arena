@@ -4227,7 +4227,7 @@ function resize() {
   camera.updateProjectionMatrix();
   const off = base.clone().sub(look), k = Math.max(1, halfW / (off.length() * a * Math.tan(camera.fov * Math.PI / 360)));
   camBase.copy(look).addScaledVector(off, k); camLook.copy(look);
-  DECK_POS.set(portrait ? -2.4 : -3.1, 0, portrait ? 2.2 : .9); DISCARD_POS.set(portrait ? 2.4 : 3.1, 0, portrait ? 2.2 : .9);
+  DECK_POS.set(portrait ? -1.62 : -3.1, 0, portrait ? 1.15 : .9); DISCARD_POS.set(portrait ? 1.62 : 3.1, 0, portrait ? 1.15 : .9);  // portrait: tucked in so the Chat / Emoji buttons have the edges
   deck.position.x = DECK_POS.x; deck.position.z = DECK_POS.z;
   layoutSeats();
   handScale = a < .6 ? .78 : a < .8 ? .82 : 1;
