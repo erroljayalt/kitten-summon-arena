@@ -768,17 +768,40 @@ const Sfx = (() => {
     if (mus.want !== mus.track) {
       mus.fading = true; musicBus.gain.setTargetAtTime(0, ctx.currentTime, .15);
       setTimeout(() => {
+        stopFile();
         mus.track = mus.want; mus.step = 0; mus.next = ctx.currentTime + .05; mus.fading = false;
+        if (mus.track.startsWith('file:')) startFile(mus.track);
         if (musicOn) musicBus.gain.setTargetAtTime(MUSIC_VOL, ctx.currentTime, .3);
       }, 550);
       return;
     }
+    if (mus.track.startsWith('file:')) return;
     const T = TRACKS[mus.track], s16 = 60 / T.bpm / 4, ahead = document.hidden ? 1.5 : .2;
     if (mus.next < ctx.currentTime) mus.next = ctx.currentTime + .05;
     while (mus.next < ctx.currentTime + ahead) {
       playStep(T, mus.track, mus.step, mus.next + (mus.step % 2 ? T.swing * s16 : 0));
       mus.next += s16; mus.step++;
     }
+  }
+  // Recorded tracks for some arenas. vol is the share of the track's full loudness (0.3 = 30%).
+  const FILE_TRACKS = {space: {url: 'audio/music/outerspace.mp3', vol: .3}};
+  const bufs = {};
+  let fileSrc = null;
+  function loadBuf(url) {
+    return bufs[url] || (bufs[url] = fetch(url).then(r => { if (!r.ok) throw new Error('missing'); return r.arrayBuffer(); })
+      .then(b => new Promise((res, rej) => ctx.decodeAudioData(b, res, rej))).catch(e => { delete bufs[url]; throw e; }));
+  }
+  function stopFile() { if (fileSrc) { try { fileSrc.stop(); } catch (e) {} fileSrc.disconnect(); fileSrc = null; } }
+  async function startFile(track) {
+    const T = FILE_TRACKS[track.slice(5)];
+    try {
+      const buf = await loadBuf(T.url);
+      if (mus.track !== track) return;
+      stopFile();
+      const src = ctx.createBufferSource(), g = ctx.createGain();
+      src.buffer = buf; src.loop = true; g.gain.value = T.vol / MUSIC_VOL;
+      src.connect(g); g.connect(musicBus); src.start(); fileSrc = src;
+    } catch (e) { if (mus.track === track) mus.track = mus.want = 'game'; }  // file missing: fall back to the built-in table music
   }
   function startMusic() { mus.next = ctx.currentTime + .1; setInterval(schedule, 40); }
   const notes = (arr, step, opts) => arr.forEach((f, i) => tone(f, {...opts, delay: (opts.delay || 0) + i * step}));
@@ -789,6 +812,9 @@ const Sfx = (() => {
     get musicOn() { return musicOn; },
     setMusic(on) { musicOn = on; try { localStorage.setItem('ksa-music', on ? '1' : '0'); } catch (e) {} if (ctx && !mus.fading) musicBus.gain.setTargetAtTime(on ? MUSIC_VOL : 0, ctx.currentTime, .2); },
     music(name) { mus.want = name; },
+    // The table track for an arena: a recorded file when that arena has one, otherwise the built-in tune.
+    tableTrack(stage) { return FILE_TRACKS[stage] ? 'file:' + stage : 'game'; },
+    preload(stage) { if (ctx && FILE_TRACKS[stage]) loadBuf(FILE_TRACKS[stage].url).catch(() => {}); },
     duck(on) { if (ctx && musicOn && !mus.fading) musicBus.gain.setTargetAtTime(on ? MUSIC_VOL * .3 : MUSIC_VOL, ctx.currentTime, .15); },
     danger(on) { mus.danger = on; },
     click() { tone(1250, {dur: .04, vol: .07}); },
@@ -1559,6 +1585,8 @@ function setStage(id) {
   if (!STAGE_BUILD[id]) id = 'space';
   if (id === currentStage) return;
   currentStage = id;
+  if (view.screen === 'game') Sfx.music(Sfx.tableTrack(id));
+  Sfx.preload(id);
   clearStage();
   const cfg = STAGE_BUILD[id](envGroup);
   scene.background = new THREE.Color(cfg.bg);
@@ -2526,7 +2554,7 @@ function showScreen(name) {
   $('#hud').hidden = !game; if (!game) setEmoTray(false); $('#bar').hidden = !game || view.mySeat < 0; $('#deckLbl').hidden = !game; $('#discLbl').hidden = !game; $('#labels').hidden = !game;
   if (!game) { $('#react').hidden = true; $('#takeover').hidden = true; }
   view.screen = name;
-  Sfx.music(game ? 'game' : 'lobby'); syncWakeLock();
+  Sfx.music(game ? Sfx.tableTrack(currentStage) : 'lobby'); syncWakeLock();
 }
 function renderHome() {
   const note = $('#netNote');
