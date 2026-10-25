@@ -282,6 +282,25 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .chat-form{display:flex;gap:6px;padding:8px 12px 12px}
 .chat-form input{flex:1;min-width:0;font:inherit;font-size:16px;color:var(--fg);background:#0e0b22;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .bubble{position:absolute;left:0;top:0;max-width:200px;background:#fff;color:#1a1426;font-size:12.5px;font-weight:600;line-height:1.3;padding:6px 10px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.4);pointer-events:none;overflow-wrap:anywhere}
+.bubble.emo{background:none;box-shadow:none;padding:0;max-width:none}
+.bubble.emo::after{display:none}
+.bubble.emo img,#mySticker img{display:block;width:96px;height:96px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));animation:emoPop .45s cubic-bezier(.3,1.6,.5,1) both}
+#mySticker{position:fixed;left:50%;bottom:calc(var(--hand-h) + 96px);transform:translateX(-50%);pointer-events:none;z-index:14}
+#mySticker img{width:120px;height:120px}
+#mySticker.out img,.bubble.emo.out img{animation:emoOut .35s ease-in both}
+@keyframes emoPop{0%{transform:scale(.2) translateY(30px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+@keyframes emoOut{to{transform:scale(.6) translateY(-20px);opacity:0}}
+#emoTray{position:fixed;right:max(12px,env(safe-area-inset-right,0px));top:calc(max(12px,env(safe-area-inset-top,0px)) + 44px);z-index:19;background:#141030;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.55);padding:10px}
+.emo-grid{display:grid;grid-template-columns:repeat(4,64px);gap:6px}
+.emo-b{width:64px;height:64px;padding:2px;border:1px solid transparent;border-radius:12px;background:#0e0b22;cursor:pointer}
+.emo-b img{width:100%;height:100%;display:block}
+.emo-b:hover{border-color:var(--holo);transform:scale(1.06)}
+.emo-b:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
+.chat-emos{display:flex;gap:4px;overflow-x:auto;padding:6px 12px;border-top:1px solid var(--line);scrollbar-width:thin}
+.chat-emos .emo-b{flex:none;width:44px;height:44px}
+.chat-log img.chat-emo{width:56px;height:56px;vertical-align:middle;display:inline-block}
+@media (max-width:640px){#emoTray{left:10px;right:10px;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}.emo-grid{grid-template-columns:repeat(4,1fr)}.emo-b{width:auto;height:auto;aspect-ratio:1}#mySticker{bottom:calc(var(--hand-h) + 120px)}#mySticker img{width:96px;height:96px}}
+@media (prefers-reduced-motion:reduce){.bubble.emo img,#mySticker img,#mySticker.out img,.bubble.emo.out img{animation:none}}
 .bubble::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
 .lbl .micdot{display:inline-flex;color:var(--ok)}
 .lbl.speaking{box-shadow:0 0 0 2px var(--ok),0 0 16px -2px var(--ok)}
@@ -406,6 +425,7 @@ img[data-card]:focus-visible,.disc-item:focus-visible{outline:2px solid var(--ho
       <span class="chip fxchip" id="dirChip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5M20 12a8 8 0 0 1-14 5"/><path d="M18 3v4h-4M6 21v-4h4"/></svg><span class="t">Reversed</span></span>
       <span class="chip fxchip sun" id="sunChip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span class="t">Sun Cat on shrine</span></span>
       <span class="chip fxchip doom" id="doomChip" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c2 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 3 3 5 1-3 1-6 1-9z"/></svg><span class="t">Cat-astrophe</span></span>
+      <button class="chipbtn emobtn" id="emoBtn" aria-label="Send an emoji" aria-haspopup="true" aria-expanded="false" aria-controls="emoTray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/><circle cx="15" cy="10" r="1.2" fill="currentColor"/></svg><span class="t">Emoji</span></button>
       <button class="chipbtn chatbtn" id="chatBtn" aria-label="Open chat" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="t">Chat</span><span class="badge" id="chatBadge" hidden>0</span></button>
       <button class="chipbtn micbtn" id="micBtn" aria-pressed="false" aria-label="Turn your mic on" hidden></button>
       <button class="chipbtn guide guide-open" aria-label="Card guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M9 8h7M9 12h5"/></svg><span class="t">Card guide</span></button>
@@ -529,6 +549,7 @@ img[data-card]:focus-visible,.disc-item:focus-visible{outline:2px solid var(--ho
   <div class="chat-head"><b>Table chat</b><button class="guide-close" id="chatClose" aria-label="Close chat">×</button></div>
   <div class="voice-box" id="voiceBox"></div>
   <ol class="chat-log" id="chatLog" aria-live="polite"></ol>
+  <div class="chat-emos" id="chatEmos" aria-label="Send an emoji"></div>
   <div class="chat-quick" id="chatQuick"></div>
   <form class="chat-form" id="chatForm"><input id="chatInput" maxlength="200" autocomplete="off" placeholder="Say something to the table" aria-label="Chat message"><button class="btn sm" type="submit">Send</button></form>
 </section>
@@ -557,6 +578,8 @@ img[data-card]:focus-visible,.disc-item:focus-visible{outline:2px solid var(--ho
   </div>
 </div>
 <div id="flash"></div>
+<div id="emoTray" role="dialog" aria-label="Emoji" hidden><div class="emo-grid" id="emoGrid"></div></div>
+<div id="mySticker" aria-hidden="true"></div>
 <div id="targetAlert" hidden role="alert"><div id="targetText"></div></div>
 <canvas id="confetti" hidden></canvas>
 
@@ -2272,6 +2295,38 @@ const P2P = (() => {
     peerMap: () => peerMapV, call: (pid, stream, meta) => peer ? peer.call(pid, stream, {metadata: meta}) : null};
 })();
 
+/* ======================= Emoji stickers ======================= */
+const EMOJIS = [['laughing', 'Laughing'], ['crying', 'Crying'], ['angry', 'Angry'], ['love', 'In love'], ['shocked', 'Shocked'], ['thumbsup', 'Thumbs up'], ['gg', 'GG'], ['thinking', 'Thinking'],
+  ['smug', 'Smug'], ['nervous', 'Nervous'], ['sleepy', 'Sleepy'], ['facepalm', 'Facepalm'], ['party', 'Party'], ['nope', 'Nope'], ['exploded', 'Exploded'], ['hello', 'Hello']];
+const EMO_SET = new Set(EMOJIS.map(e => e[0]));
+const emoOf = text => { const m = /^:([a-z]+):$/.exec(String(text || '')); return m && EMO_SET.has(m[1]) ? m[1] : null; };
+const emoImg = (e, cls = '') => `<img${cls ? ` class="${cls}"` : ''} src="emoji/${e}.png" alt="${esc((EMOJIS.find(x => x[0] === e) || [e, e])[1])}">`;
+const emoButtons = () => EMOJIS.map(([k, l]) => `<button type="button" class="emo-b" data-emo="${k}" title="${l}" aria-label="${l}"><img src="emoji/${k}.png" alt="" loading="lazy"></button>`).join('');
+let myStickerT = 0, lastEmo = 0;
+// Shows an emoji sticker above a seat (or above your own hand when it is you).
+function showSticker(seat, e) {
+  if (!EMO_SET.has(e) || seat == null || seat < 0) return;
+  if (seat === view.mySeat) {
+    const el = $('#mySticker'); el.classList.remove('out'); el.innerHTML = emoImg(e);
+    clearTimeout(myStickerT); myStickerT = setTimeout(() => { el.classList.add('out'); myStickerT = setTimeout(() => { el.innerHTML = ''; }, 380); }, 2800);
+  } else view.stickers[seat] = {e, until: Date.now() + 3400};
+  Sfx.chat();
+}
+function sendEmoji(e) {
+  const now = Date.now(); if (now - lastEmo < 1200) return; lastEmo = now;
+  if (view.screen === 'game' && view.mySeat >= 0) showSticker(view.mySeat, e);
+  if (Chat.code) chatSend(`:${e}:`);
+  setEmoTray(false);
+}
+function setEmoTray(open) { $('#emoTray').hidden = !open; $('#emoBtn').setAttribute('aria-expanded', String(open)); if (open) { const b = $('#emoGrid .emo-b'); if (b) b.focus(); } }
+$('#emoGrid').innerHTML = emoButtons();
+$('#emoBtn').addEventListener('click', e => { e.stopPropagation(); setEmoTray($('#emoTray').hidden); });
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-emo]'); if (b) { sendEmoji(b.dataset.emo); return; }
+  if (!$('#emoTray').hidden && !e.target.closest('#emoTray')) setEmoTray(false);
+});
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#emoTray').hidden) { setEmoTray(false); $('#emoBtn').focus(); } });
+
 /* ======================= Table chat ======================= */
 const ICON_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>';
 const ICON_MIC_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M3 3l18 18"/></svg>';
@@ -2297,7 +2352,9 @@ function chatStart(code) {
     const fresh = all.filter(m => !known.has(m.uid + '|' + m.id));
     Chat.items = all.slice(-80);
     if (Chat.loaded) for (const m of fresh) if (m.uid !== me.id) {
-      bubbles[m.uid] = {text: m.text, until: Date.now() + 5000};
+      const emo = emoOf(m.text), seat = view.snap && view.snap.seats ? view.snap.seats.findIndex(x => x.uid === m.uid) : -1;
+      if (emo && seat >= 0 && view.screen === 'game') showSticker(seat, emo);
+      else bubbles[m.uid] = {text: m.text, until: Date.now() + 5000};
       if (!Chat.open) Chat.unread++;
       Sfx.chat();
     }
@@ -2322,7 +2379,7 @@ async function chatSend(text) {
 function renderChat() {
   const log = $('#chatLog');
   log.innerHTML = Chat.items.length
-    ? Chat.items.map(m => `<li class="${m.uid === me.id ? 'me' : ''}"><b style="color:${chatColor(m.uid)}">${esc(m.uid === me.id ? 'You' : m.nick)}</b>${esc(m.text)}</li>`).join('')
+    ? Chat.items.map(m => `<li class="${m.uid === me.id ? 'me' : ''}"><b style="color:${chatColor(m.uid)}">${esc(m.uid === me.id ? 'You' : m.nick)}</b>${emoOf(m.text) ? emoImg(emoOf(m.text), 'chat-emo') : esc(m.text)}</li>`).join('')
     : '<li class="empty">No messages yet. Say hi to the table!</li>';
   log.scrollTop = log.scrollHeight;
   updateChatUI();
@@ -2342,6 +2399,7 @@ $('#chatBtn').addEventListener('click', () => setChatOpen(!Chat.open));
 $('#lobbyChat').addEventListener('click', () => setChatOpen(true));
 $('#chatClose').addEventListener('click', () => setChatOpen(false));
 $('#chatForm').addEventListener('submit', e => { e.preventDefault(); chatSend($('#chatInput').value); $('#chatInput').value = ''; });
+$('#chatEmos').innerHTML = emoButtons();
 $('#chatQuick').innerHTML = QUICK.map(q => `<button class="btn sm alt" type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('');
 $('#chatQuick').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (b) chatSend(b.dataset.q); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && Chat.open) setChatOpen(false); });
@@ -2456,7 +2514,7 @@ function showScreen(name) {
   $('#home').hidden = name !== 'home';
   $('#lobbyPanel').hidden = name !== 'lobby';
   const game = name === 'game';
-  $('#hud').hidden = !game; $('#bar').hidden = !game || view.mySeat < 0; $('#deckLbl').hidden = !game; $('#discLbl').hidden = !game; $('#labels').hidden = !game;
+  $('#hud').hidden = !game; if (!game) setEmoTray(false); $('#bar').hidden = !game || view.mySeat < 0; $('#deckLbl').hidden = !game; $('#discLbl').hidden = !game; $('#labels').hidden = !game;
   if (!game) { $('#react').hidden = true; $('#takeover').hidden = true; }
   view.screen = name;
   Sfx.music(game ? 'game' : 'lobby'); syncWakeLock();
@@ -2839,6 +2897,8 @@ async function runEngine(tok) {
   }
   if (!stillHost(tok)) return;
   G.status = 'over'; G.winner = G.alive.indexOf(true); G.prompt = null; G.nope = null;
+  if (!isHuman(G.winner)) botEmote(G.winner, 'party');
+  G.seats.forEach((_, b) => { if (b !== G.winner && !isHuman(b) && Math.random() < .5) botEmote(b, anyOf(['gg', 'crying', 'facepalm'])); });
   await emitEv({k: 'win', p: G.winner});
   if (G.online) db.doc('lobbies/' + G.code).update({status: 'open', updated: Date.now()}).catch(() => {});
 }
@@ -3203,6 +3263,7 @@ async function saveG(p) {
   const card = G.hands[p].find(c => c.t === use);
   removeCards(p, [card]); G.top = use;
   await emitEv({k: 'play', p, cards: [card], n: 1, target: null, defuse: true}, 1600);
+  if (!isHuman(p) && Math.random() < .4) botEmote(p, anyOf(['nervous', 'shocked']));
   if (use === 'undead' && dead.length) {
     const r = revive != null ? revive : anyOf(dead);
     G.alive[r] = true;
@@ -3220,7 +3281,11 @@ async function explodeG(p, c) {
   for (const k of Object.keys(G.sticky)) if (G.sticky[k] === p) delete G.sticky[k];
   if (G.howl === p) G.howl = null;
   await emitEv({k: 'explode', p, card: c, lost}, 2600);
+  if (!isHuman(p) && Math.random() < .7) botEmote(p, anyOf(['exploded', 'crying', 'angry']));
+  G.seats.forEach((_, b) => { if (b !== p && G.alive[b] && !isHuman(b) && Math.random() < .35) botEmote(b, anyOf(['laughing', 'smug', 'shocked'])); });
 }
+// A bot sends an emoji sticker. Not awaited: it never slows the game down.
+function botEmote(seat, e) { const g0 = G; setTimeout(() => { if (G && G === g0) emitEv({k: 'emote', p: seat, e}); }, 300 + Math.random() * 1500); }
 // A player who loses their Sneaky Kitten while secretly holding a kitten must face it.
 async function sneakyCheck(p) {
   if (!G.alive[p]) return false;
@@ -3440,7 +3505,7 @@ const Confetti = (() => {
 
 /* ======================= Client view ======================= */
 const view = {screen: 'home', code: null, started: 0, ver: 0, snap: null, mySeat: -1, lastSeq: 0, queue: [], playing: false, mirror: null,
-  hand: [], handoff: new Map(), seatObjs: [], fanN: [], boomMesh: null, log: [], sentFor: 0, modalFor: 0, reactId: 0, hostGoneAt: 0, waiting: false};
+  hand: [], handoff: new Map(), stickers: {}, seatObjs: [], fanN: [], boomMesh: null, log: [], sentFor: 0, modalFor: 0, reactId: 0, hostGoneAt: 0, waiting: false};
 let hovered = null;
 const nm = s => s === view.mySeat ? 'You' : (view.snap ? view.snap.seats[s].nick : '?');
 const nmObj = s => s === view.mySeat ? 'you' : nm(s);
@@ -3451,7 +3516,7 @@ function clearTable() {
   scene.children.filter(o => o.userData.isCard).forEach(o => scene.remove(o));
   [...handGroup.children].forEach(o => handGroup.remove(o));
   view.seatObjs.forEach(o => { if (o) { scene.remove(o.group); scene.remove(o.fan); } });
-  view.seatObjs = []; view.hand = []; view.handoff.clear(); view.target = null; $('#targetAlert').hidden = true; discardMeshes = []; discardTypes = []; updateDiscardLbl(); closeDiscard(); view.boomMesh = null;
+  view.seatObjs = []; view.hand = []; view.handoff.clear(); view.target = null; view.stickers = {}; $('#mySticker').innerHTML = ''; $('#targetAlert').hidden = true; discardMeshes = []; discardTypes = []; updateDiscardLbl(); closeDiscard(); view.boomMesh = null;
   dismissHolo(); danger = false; padTarget.set('#62f0ff'); $('#tag').innerHTML = ''; $('#labels').innerHTML = '';
   setDeckHeight(46);
 }
@@ -3522,7 +3587,7 @@ function onGameState(snap, remote) {
   const evs = snap.events.filter(e => e.seq > view.lastSeq);
   if (evs.length && evs[0].seq > view.lastSeq + 1) {
     view.queue = []; view.lastSeq = snap.seq; view.mirror = snap.events[snap.events.length - 1].after; applyMirror(true);
-  } else for (const e of evs) { view.queue.push(e); view.lastSeq = e.seq; }
+  } else for (const e of evs) { view.lastSeq = e.seq; if (e.k === 'emote') showSticker(e.p, e.e); else view.queue.push(e); }  // stickers never wait behind animations
   pump();
   updatePromptUI();
 }
@@ -4196,13 +4261,19 @@ function renderLabels() {
     if (sr.width && top < sr.bottom + 4 && cx + lw / 2 > sr.left - 4 && cx - lw / 2 < sr.right + 4) top = sr.bottom + 4;
     placed.push({x: cx, y: top, w: lw});
     o.lbl.style.transform = `translate(${Math.round(cx - lw / 2)}px,${Math.round(top)}px)`;
-    const uid = sn.seats[s].uid, say = uid && bubbles[uid] && bubbles[uid].until > Date.now() ? bubbles[uid].text : '';
-    if (say) {
-      if (o.bub.textContent !== say) o.bub.textContent = say;
+    const uid = sn.seats[s].uid, stk = view.stickers[s] && view.stickers[s].until > Date.now() ? view.stickers[s] : null;
+    const say = stk ? '' : uid && bubbles[uid] && bubbles[uid].until > Date.now() ? bubbles[uid].text : '';
+    if (stk || say) {
+      const key = stk ? 'emo:' + stk.e + stk.until : say;
+      if (o.bub._k !== key) { o.bub._k = key; o.bub.classList.toggle('emo', !!stk); if (stk) o.bub.innerHTML = emoImg(stk.e); else o.bub.textContent = say; }
+      o.bub.classList.toggle('out', !!stk && stk.until - Date.now() < 380);
       o.bub.hidden = false;
-      const bw = o.bub.offsetWidth, bx = Math.min(W - 6 - bw / 2, Math.max(6 + bw / 2, cx));
-      o.bub.style.transform = `translate(${Math.round(bx - bw / 2)}px,${Math.round(top - o.bub.offsetHeight - 8)}px)`;
-    } else o.bub.hidden = true;
+      const bw = o.bub.offsetWidth, bh = o.bub.offsetHeight;
+      let bx = Math.min(W - 6 - bw / 2, Math.max(6 + bw / 2, cx)), by = top - bh - 8;
+      // Would cover the Turn / Deck / Bombs row: sit beside the name tag instead.
+      if (sr.width && by < sr.bottom + 4 && bx + bw / 2 > sr.left && bx - bw / 2 < sr.right) { bx = Math.min(W - 6 - bw / 2, cx + lw / 2 + 8 + bw / 2); by = Math.max(sr.bottom + 4, top + lh / 2 - bh / 2); }
+      o.bub.style.transform = `translate(${Math.round(bx - bw / 2)}px,${Math.round(by)}px)`;
+    } else { o.bub.hidden = true; o.bub._k = ''; }
     o.lbl.classList.toggle('speaking', Voice.speaking(uid));
     const st = sn.seats[s], act = sn.status === 'playing' && M.cur === s && M.alive[s];
     const away = st.kind === 'human' && sn.online && !isUserOnline(st.uid);
