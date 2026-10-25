@@ -315,6 +315,12 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .guide-search input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:inherit;font-size:14px;padding:8px 0;outline:none}
 .guide-search input::placeholder{color:var(--muted)}
 .guide-empty{margin:24px 0;text-align:center;color:var(--muted)}
+#cardView{position:fixed;inset:0;display:grid;place-items:center;background:rgba(6,5,14,.72);z-index:40;padding:16px;box-sizing:border-box}
+[data-card]{cursor:zoom-in}
+img[data-card]:hover,.disc-item:hover img{filter:brightness(1.08);box-shadow:0 0 0 2px var(--holo)}
+img[data-card]:focus-visible,.disc-item:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
+.disc-item{display:grid;gap:4px;width:100%;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:center}
+.opt.static[data-card]{cursor:zoom-in}
 .field-err{margin:6px 0 0;font-size:13px;color:#ff8fa3;display:flex;align-items:center;gap:6px}
 .field-err::before{content:"!";display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;font-size:11px;font-weight:700;flex:none}
 #nick[aria-invalid="true"]{border-color:var(--danger);box-shadow:0 0 0 2px color-mix(in srgb,var(--danger) 35%,transparent)}
@@ -526,6 +532,12 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
   <div class="chat-quick" id="chatQuick"></div>
   <form class="chat-form" id="chatForm"><input id="chatInput" maxlength="200" autocomplete="off" placeholder="Say something to the table" aria-label="Chat message"><button class="btn sm" type="submit">Send</button></form>
 </section>
+<div id="cardView" hidden>
+  <div class="guide-sheet disc-sheet" role="dialog" aria-modal="true" aria-labelledby="cvTitle">
+    <div class="guide-head"><h2 id="cvTitle">Card</h2><button class="guide-close" id="cvClose" aria-label="Close the card">×</button></div>
+    <div class="guide-body" id="cvBody"></div>
+  </div>
+</div>
 <div id="disc" hidden>
   <div class="guide-sheet disc-sheet" role="dialog" aria-modal="true" aria-labelledby="discTitle">
     <div class="guide-head"><h2 id="discTitle">Latest discard</h2><button class="guide-close" id="discClose" aria-label="Close the discard pile">×</button></div>
@@ -1920,7 +1932,7 @@ function ask({title, text = '', options}) {
   return new Promise(res => {
     const m = $('#modal');
     m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><h2>${esc(title)}</h2>${text ? `<p>${esc(text)}</p>` : ''}<div class="opts">${options.map((o, i) =>
-      o.img ? `<button class="opt${o.static ? ' static' : ''}" data-i="${i}"><img src="${o.img}" alt="${esc(o.label)}">${esc(o.caption || '')}</button>`
+      o.img ? `<button class="opt${o.static ? ' static' : ''}" data-i="${i}"${o.static && o.card ? ` data-card="${o.card}"` : ''}><img src="${o.img}" alt="${esc(o.label)}">${esc(o.caption || '')}</button>`
             : `<button class="btn ${o.cls || ''}" data-i="${i}">${esc(o.label)}</button>`).join('')}</div></div>`;
     m.hidden = false;
     m.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => {
@@ -3637,18 +3649,30 @@ function openDiscard() {
   if (!discardTypes.length) return setHint('The discard pile is empty.');
   const list = [...discardTypes].reverse(), top = list[0], T = TYPES[top];
   $('#discTitle').textContent = 'Latest discard'; $('#discClose').setAttribute('aria-label', 'Close the discard pile');
-  $('#discBody').innerHTML = `<figure class="disc-top"><img src="${faceURL[top] || ''}" alt="${esc(T.name)}"><figcaption><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><h3>${esc(T.name)}</h3><p>${esc(T.text)}</p></figcaption></figure>` +
-    (list.length > 1 ? `<h4 class="disc-sub">Played before that</h4><ol class="disc-list">${list.slice(1, 13).map(t => `<li><img src="${faceURL[t] || ''}" alt=""><span>${esc(TYPES[t].name)}</span></li>`).join('')}</ol>` : '');
+  $('#discBody').innerHTML = `<figure class="disc-top"><img src="${faceURL[top] || ''}" alt="${esc(T.name)}" data-card="${top}" role="button" tabindex="0"><figcaption><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><h3>${esc(T.name)}</h3><p>${esc(T.text)}</p></figcaption></figure>` +
+    (list.length > 1 ? `<h4 class="disc-sub">Played before that</h4><ol class="disc-list">${list.slice(1, 13).map(t => `<li><button type="button" class="disc-item" data-card="${t}"><img src="${faceURL[t] || ''}" alt=""><span>${esc(TYPES[t].name)}</span></button></li>`).join('')}</ol>` : '');
   $('#disc').hidden = false; $('#discClose').focus();
 }
-// Close-up of a card in your hand, so you can read it while you wait for your turn.
+// Close-up of any card: tap a card picture anywhere in the game (hand, discard pile, card guide, card reveals).
+let cvReturn = null;
 function openCardView(t) {
-  const T = TYPES[t], g = GUIDE[t] || {};
-  $('#discTitle').textContent = T.name; $('#discClose').setAttribute('aria-label', 'Close the card');
-  $('#discBody').innerHTML = `<figure class="disc-top"><img src="${faceURL[t] || ''}" alt="${esc(T.name)}"><figcaption><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><h3>${esc(T.name)}</h3><p>${esc(T.text)}</p>` +
+  if (t === 'implodeUp') t = 'implode';
+  const T = TYPES[t]; if (!T) return;
+  const g = GUIDE[t] || (CATS.includes(t) ? CAT_GUIDE : {});
+  $('#cvTitle').textContent = T.name;
+  $('#cvBody').innerHTML = `<figure class="disc-top"><img src="${faceURL[t] || ''}" alt="${esc(T.name)}"><figcaption><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><h3>${esc(T.name)}</h3><p>${esc(T.text)}</p>` +
     (g.use ? `<p class="cv-use"><b>How to use it:</b> ${g.use}</p>` : '') + (g.tip ? `<p class="cv-tip"><b>Tip:</b> ${g.tip}</p>` : '') + `</figcaption></figure>`;
-  $('#disc').hidden = false; $('#discClose').focus();
+  if ($('#cardView').hidden) cvReturn = document.activeElement;
+  $('#cardView').hidden = false; $('#cvClose').focus();
 }
+function closeCardView() { if ($('#cardView').hidden) return; $('#cardView').hidden = true; if (cvReturn && cvReturn.focus) cvReturn.focus(); cvReturn = null; }
+document.addEventListener('click', e => {
+  if (e.target.id === 'cardView' || e.target.closest('#cvClose')) return closeCardView();
+  const c = e.target.closest('[data-card]'); if (c && !c.closest('#cardView')) { e.stopPropagation(); Sfx.flip(); openCardView(c.dataset.card); }
+}, true);
+document.addEventListener('keydown', e => { const c = (e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('img[data-card]'); if (c) { e.preventDefault(); openCardView(c.dataset.card); } });
+// Esc closes the close-up first, before any window underneath it.
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#cardView').hidden) { e.stopImmediatePropagation(); closeCardView(); } }, true);
 function closeDiscard() { $('#disc').hidden = true; }
 document.addEventListener('click', e => { if (e.target.id === 'disc' || e.target.closest('#discClose')) closeDiscard(); });
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#disc').hidden) closeDiscard(); });
@@ -3895,7 +3919,7 @@ function updatePromptUI() {
     if (pr.kind === 'hide') { const n = pr.n; ask({title: pr.title || 'Hide the kitten', text: `${pr.text || 'Put it back anywhere in the draw pile.'} (${n} cards in the pile)`,
         options: [{label: 'Top', value: 0}, {label: '2nd', value: Math.min(1, n)}, {label: '3rd', value: Math.min(2, n)}, {label: 'Middle', value: Math.floor(n / 2)}, {label: 'Bottom', value: n}, {label: 'Random', value: -1, cls: 'alt'}]})
       .then(idx => sendIntent({k: 'hide', p: pr.id, idx})); }
-    if (pr.kind === 'choice') ask({title: pr.title, text: pr.text, options: [...(pr.card ? [{img: faceURL[pr.card], label: tname(pr.card), caption: tname(pr.card), value: null, static: true}] : []), ...pr.opts]})
+    if (pr.kind === 'choice') ask({title: pr.title, text: pr.text, options: [...(pr.card ? [{img: faceURL[pr.card], label: tname(pr.card), caption: tname(pr.card), value: null, static: true, card: pr.card}] : []), ...pr.opts]})
       .then(v => sendIntent({k: 'choice', p: pr.id, v}));
     if (pr.kind === 'arrange') arrangeAsk(pr.title, pr.cards).then(order => sendIntent({k: 'arrange', p: pr.id, order}));
   }
@@ -3947,7 +3971,7 @@ function handOptions() {
   return view.hand.map((h, i) => blind ? {img: backURL, label: `Card ${i + 1}`, caption: `Card ${i + 1}`, value: h.id} : {img: faceURL[h.type], label: tname(h.type), value: h.id});
 }
 function showCards(title, text, cards) {
-  ask({title, text, options: [...cards.map((t, i) => ({img: faceURL[t === 'implodeUp' ? 'implode' : t], label: tname(t), caption: i === 0 ? 'Top' : `#${i + 1}`, value: 0, static: true})), {label: 'Got it', value: 1}]});
+  ask({title, text, options: [...cards.map((t, i) => ({img: faceURL[t === 'implodeUp' ? 'implode' : t], label: tname(t), caption: i === 0 ? 'Top' : `#${i + 1}`, value: 0, static: true, card: t === 'implodeUp' ? 'implode' : t})), {label: 'Got it', value: 1}]});
 }
 // Reorder the top cards of the deck: left is the top.
 function arrangeAsk(title, types) {
@@ -3956,7 +3980,7 @@ function arrangeAsk(title, types) {
     const m = $('#modal');
     const draw = () => {
       m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><h2>${esc(title)}</h2><p>Left is the top of the deck. Move cards with the arrows, then press Done.</p>
-        <div class="opts arrange">${order.map((ix, pos) => { const t = types[ix] === 'implodeUp' ? 'implode' : types[ix]; return `<div class="opt static"><img src="${faceURL[t]}" alt="${esc(tname(t))}">${pos === 0 ? 'Top' : '#' + (pos + 1)}<span class="arr"><button class="btn sm alt" data-mv="${pos}" data-d="-1" aria-label="Move ${esc(tname(t))} up"${pos === 0 ? ' disabled' : ''}>&larr;</button><button class="btn sm alt" data-mv="${pos}" data-d="1" aria-label="Move ${esc(tname(t))} down"${pos === order.length - 1 ? ' disabled' : ''}>&rarr;</button></span></div>`; }).join('')}</div>
+        <div class="opts arrange">${order.map((ix, pos) => { const t = types[ix] === 'implodeUp' ? 'implode' : types[ix]; return `<div class="opt static"><img src="${faceURL[t]}" alt="${esc(tname(t))}" data-card="${t}" role="button" tabindex="0">${pos === 0 ? 'Top' : '#' + (pos + 1)}<span class="arr"><button class="btn sm alt" data-mv="${pos}" data-d="-1" aria-label="Move ${esc(tname(t))} up"${pos === 0 ? ' disabled' : ''}>&larr;</button><button class="btn sm alt" data-mv="${pos}" data-d="1" aria-label="Move ${esc(tname(t))} down"${pos === order.length - 1 ? ' disabled' : ''}>&rarr;</button></span></div>`; }).join('')}</div>
         <div class="opts"><button class="btn" data-done="1">Done</button></div></div>`;
       m.hidden = false;
       m.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', () => { const p = +b.dataset.mv, q = p + +b.dataset.d; [order[p], order[q]] = [order[q], order[p]]; draw(); }));
@@ -4077,14 +4101,29 @@ renderer.domElement.addEventListener('pointermove', e => {
   const h = pick(e); hovered = h && h.card || null;
   renderer.domElement.style.cursor = h ? 'pointer' : '';
 });
+let holdT = 0, held = false;
+const holdCard = c => { if (view.handBlind) return setHint('You are blindfolded, so you cannot look at your cards.'); Sfx.flip(); openCardView(c.type); };
+renderer.domElement.addEventListener('pointerdown', e => {
+  clearTimeout(holdT); held = false;
+  if (view.screen !== 'game') return;
+  const h = pick(e); if (!h || !h.card) return;
+  holdT = setTimeout(() => { held = true; holdCard(h.card); }, 480);
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => renderer.domElement.addEventListener(ev, () => clearTimeout(holdT)));
+renderer.domElement.addEventListener('contextmenu', e => {
+  if (view.screen !== 'game') return;
+  const h = pick(e); if (!h || !h.card) return;
+  e.preventDefault(); clearTimeout(holdT); held = true; holdCard(h.card);
+});
 renderer.domElement.addEventListener('click', e => {
   if (view.screen !== 'game') return;
+  if (held) { held = false; return; }
   const h = pick(e); if (!h) return;
   if (h.deck) return doDraw();
   if (h.discard) { Sfx.flip(); return openDiscard(); }
   const c = h.card;
   if (!$('#react').hidden && c.type === 'nope') return fireNope();
-  if (!turnPrompt()) { if (view.handBlind) return setHint('You are blindfolded, so you cannot look at your cards.'); Sfx.flip(); return openCardView(c.type); }
+  if (!turnPrompt()) return holdCard(c);
   c.selected = !c.selected; updateBar(); Sfx.flip();
 });
 
@@ -4384,7 +4423,7 @@ const GUIDE = {
 const CAT_GUIDE = {use: 'No power on its own. Collect matching cat cards and play them as a <b>pair</b> or <b>three of a kind</b>. See the Combos tab.', tip: 'Keep your cat cards together: your hand is sorted so matching cards sit side by side.'};
 let guideTab = 'cards';
 function guideHTML(tab) {
-  const img = t => faceURL[t] ? `<img src="${faceURL[t]}" alt="${esc(TYPES[t].name)} card">` : '';
+  const img = t => faceURL[t] ? `<img src="${faceURL[t]}" alt="${esc(TYPES[t].name)} card" data-card="${t}" role="button" tabindex="0">` : '';
   if (tab === 'cards') {
     const entry = t => {
       const T = TYPES[t], G = GUIDE[t] || CAT_GUIDE;
