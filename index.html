@@ -1349,7 +1349,7 @@ const PN = 140, pPos = new Float32Array(PN * 3), pSpd = new Float32Array(PN);
 for (let i = 0; i < PN; i++) { const a = Math.random() * 6.28, r = .3 + Math.random() * 1.1; pPos[i * 3] = Math.cos(a) * r; pPos[i * 3 + 1] = Math.random() * 3.2; pPos[i * 3 + 2] = Math.sin(a) * r; pSpd[i] = .4 + Math.random() * .9; }
 const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 const pMat = new THREE.PointsMaterial({size: .07, map: dotTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, color: '#62f0ff'});
-scene.add(new THREE.Points(pGeo, pMat));
+const pPts = new THREE.Points(pGeo, pMat); scene.add(pPts);
 const BN = 380, bPos = new Float32Array(BN * 3), bVel = new Float32Array(BN * 3);
 const bGeo = new THREE.BufferGeometry(); bGeo.setAttribute('position', new THREE.BufferAttribute(bPos, 3));
 const bMat = new THREE.PointsMaterial({size: .2, map: dotTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, color: '#ffa040'});
@@ -2049,6 +2049,7 @@ function disposeHolo(h) { scene.remove(h); h.traverse(o => { if (o.geometry) o.g
 function dismissHolo() { if (currentHolo) { currentHolo.userData.dying = 0; fading.push(currentHolo); currentHolo = null; } }
 function summon(type, by, fx) {
   dismissHolo();
+  if (view.boardMode) { if (fx !== '') { showFx(fx || TYPES[type].fx, TYPES[type].color); Sfx.summon(type); } $('#tag').innerHTML = by ? `${esc(by)} · <b style="color:${TYPES[type].color}">${TYPES[type].name}</b>` : ''; return; }
   const h = buildHolo(type); h.userData.born = clock.elapsedTime; scene.add(h); currentHolo = h;
   padTarget.set(TYPES[type].color); beamU.uOp.value = 1.6; padLight.intensity = 5;
   danger = type === 'boom';
@@ -3946,8 +3947,8 @@ const BoardView = (() => {
   const DISC_FLY = DISC_GEO.clone().rotateY(Math.PI / 2).rotateX(Math.PI / 2);   // face on +z, so it can face the camera
   const qUp = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
   const portrait = () => isPortrait();
-  const mdPos = () => new V3(portrait() ? -.6 : -.8, 0, portrait() ? .95 : .8);
-  const mdisPos = () => new V3(portrait() ? .6 : .8, 0, portrait() ? .95 : .8);
+  const mdPos = () => new V3(portrait() ? -.6 : -.9, 0, portrait() ? 1.2 : 1.2);
+  const mdisPos = () => new V3(portrait() ? .6 : .9, 0, portrait() ? 1.2 : 1.2);
 
   function build() {
     if (built) return; built = true;
@@ -3986,8 +3987,8 @@ const BoardView = (() => {
     plate.material[2].map = tx || null; plate.material[2].color.set(tx ? '#ffffff' : ch ? '#c8332d' : '#3d7fd9'); plate.material[2].needsUpdate = true;
   }
   function layout() {
-    const s = portrait() ? .74 : 1;
-    grp.scale.setScalar(s); grp.position.set(0, 0, portrait() ? -.15 : 0);
+    const s = portrait() ? .86 : 1.26;
+    grp.scale.setScalar(s); grp.position.set(.2 * s, 0, portrait() ? -.1 : -.05);
     grp.updateMatrixWorld(true);
   }
   // World position of seat s's pawn standing on space i (the Litter Box seats up to 6 in a little grid).
@@ -4097,7 +4098,7 @@ const BoardView = (() => {
     const mine = !!turnPrompt(), up = B.up.slice(0, 4).map(u => `${u.i === 0 ? 'next' : '#' + (u.i + 1)}: ${DISCS[u.t].label}`);
     const txt = `Move deck · ${B.mdN}${mine ? ' · tap to draw' : ''}${up.length ? '\n' + up.join(' · ') : ''}`;
     if (l._t !== txt) { l._t = txt; l.textContent = txt; }
-    place(l, mdPos().setZ(mdPos().z + .45).setX(0), '-50%', '0%');
+    if (portrait()) place(l, mdPos().setZ(mdPos().z - .25).setX(0).setY(.6), '-50%', '-100%'); else place(l, mdPos().setX(mdPos().x - .45).setY(.15), '-100%', '-50%');
   }
   function hitDeck(ray) { return deckG.visible && ray.intersectObjects(deckG.children)[0]; }
   function tick(t) { if (last.gift && grp.visible) last.gift.rotation.y = t * .8; }
@@ -4343,7 +4344,8 @@ const isPortrait = () => camera.aspect < .9;
 function layoutSeats() {
   const others = view.others || []; if (!others.length) return;
   const n = others.length, crowd = n > 5, portrait = isPortrait();
-  const rx = portrait ? (crowd ? 4.2 : 3.6) : (crowd ? 6.2 : 5.4), rz = portrait ? (crowd ? 5.4 : 5.0) : (crowd ? 5.1 : 4.6);
+  const bm = view.boardMode ? (portrait ? .5 : 1) : 0;
+  const rx = (portrait ? (crowd ? 4.2 : 3.6) : (crowd ? 6.2 : 5.4)) + bm, rz = (portrait ? (crowd ? 5.4 : 5.0) : (crowd ? 5.1 : 4.6)) + bm * .7;
   const scale = (crowd ? Math.max(.55, 1 - (n - 5) * .05) : 1) * (portrait ? .88 : 1);
   seatAngles(n).forEach((deg, k) => {
     const o = view.seatObjs[others[k]]; if (!o) return;
@@ -4356,6 +4358,8 @@ function layoutSeats() {
   });
 }
 function setupGame(snap) {
+  view.boardMode = snap.mode === 'board';
+  [ringA, ringB, padGlow, beam, pPts].forEach(o => { o.visible = !view.boardMode; });
   clearTable(); closeModal();
   setStage(snap.stage || 'space');
   view.code = snap.code; view.started = snap.started; view.ver = 0; view.winner = -1;
@@ -5097,7 +5101,8 @@ function resize() {
   camera.updateProjectionMatrix();
   const off = base.clone().sub(look), k = Math.max(1, halfW / (off.length() * a * Math.tan(camera.fov * Math.PI / 360)));
   camBase.copy(look).addScaledVector(off, k); camLook.copy(look);
-  DECK_POS.set(portrait ? -1.62 : -3.1, 0, portrait ? 1.15 : .9); DISCARD_POS.set(portrait ? 1.62 : 3.1, 0, portrait ? 1.15 : .9);  // portrait: tucked in so the Chat / Emoji buttons have the edges
+  DECK_POS.set(portrait ? -1.62 : -3.1, 0, portrait ? 1.15 : .9); DISCARD_POS.set(portrait ? 1.62 : 3.1, 0, portrait ? 1.15 : .9);
+  if (view.boardMode) { DECK_POS.set(portrait ? -1.75 : -4.7, 0, portrait ? 1.45 : .75); DISCARD_POS.set(portrait ? 1.75 : 4.7, 0, portrait ? 1.45 : .75); }  // portrait: tucked in so the Chat / Emoji buttons have the edges
   deck.position.x = DECK_POS.x; deck.position.z = DECK_POS.z;
   layoutSeats();
   handScale = a < .6 ? .78 : a < .8 ? .82 : 1;
