@@ -660,18 +660,18 @@ const CATS = ['toast','melon','disco','potato','cloud'];
 Object.assign(TYPES, {
   b_defuse:  {name:'Defuse',                    kind:'Rescue',          color:'#3ee0a1', acc:'hat',       fx:'DEFUSED!',       anim:'pop',   art:'defuse',     text:'Land on an Exploding Kitten space? Play this instead of exploding and stay where you are. It cannot be Noped.'},
   b_nope:    {name:'Nope NOW',                  kind:'Reaction · NOW',  color:'#b3bccf', acc:'mask',      fx:'NOPE!',          anim:'shake', art:'nope',       text:'Stop an Action Card before it happens. Play one on a Nope NOW to make a Yup.'},
-  b_skip3:   {name:'Skip and Draw 3',           kind:'Action',          color:'#4cc6ff', acc:'shoes',     fx:'SKIP + DRAW 3',  anim:'dash',  art:'skip',       text:'Do not draw a Move Disc. Draw 3 Action Cards instead. This ends your turn.'},
-  b_draw5:   {name:'Draw to Five',              kind:'Action',          color:'#f2c14e', acc:'tower',     h3:'hat',   fx:'DRAW TO 5',  anim:'pop',   art:'tower',      text:'Draw Action Cards until you hold 5.'},
-  b_expose1: {name:'Expose the Future (1x)',    kind:'Action',          color:'#c08bff', acc:'megaphone', h3:'orb',   fx:'EXPOSED',    anim:'rise',  art:'reveal',     text:'Flip the next face-down Move Disc face up for everyone to see.'},
-  b_expose3: {name:'Expose the Future (3x)',    kind:'Action',          color:'#9d6bff', acc:'orb5',      h3:'orb',   fx:'EXPOSED x3', anim:'rise',  art:'future5',    text:'Flip the next 3 face-down Move Discs face up for everyone to see.'},
-  b_mega:    {name:'Mega Move',                 kind:'Action',          color:'#1fa2ff', acc:'rocket',    h3:'shoes', fx:'MEGA MOVE!', anim:'dash',  art:'superskip',  text:'Draw 2 Move Discs, add their numbers and move that far. Ignore what the discs say. This ends your turn.'},
+  b_skip3:   {name:'Skip and Draw 3',           kind:'Action',          color:'#4cc6ff', acc:'shoes',     fx:'SKIP + DRAW 3',  anim:'dash',  text:'Do not draw a Move Disc. Draw 3 Action Cards instead. This ends your turn.'},
+  b_draw5:   {name:'Draw to Five',              kind:'Action',          color:'#f2c14e', acc:'tower',     h3:'hat',   fx:'DRAW TO 5',  anim:'pop',   text:'Draw Action Cards until you hold 5.'},
+  b_expose1: {name:'Expose the Future (1x)',    kind:'Action',          color:'#c08bff', acc:'megaphone', h3:'orb',   fx:'EXPOSED',    anim:'rise',  text:'Flip the next face-down Move Disc face up for everyone to see.'},
+  b_expose3: {name:'Expose the Future (3x)',    kind:'Action',          color:'#9d6bff', acc:'orb5',      h3:'orb',   fx:'EXPOSED x3', anim:'rise',  text:'Flip the next 3 face-down Move Discs face up for everyone to see.'},
+  b_mega:    {name:'Mega Move',                 kind:'Action',          color:'#1fa2ff', acc:'rocket',    h3:'shoes', fx:'MEGA MOVE!', anim:'dash',  text:'Draw 2 Move Discs, add their numbers and move that far. Ignore what the discs say. This ends your turn.'},
   b_bottom:  {name:'Draw From the Bottom',      kind:'Action',          color:'#5aa0ff', acc:'down',      h3:'shoes', fx:'FROM THE BOTTOM', anim:'rise', art:'bottom', text:'Draw the bottom Move Disc instead of the top one. This ends your turn.'},
-  b_small:   {name:'1 Small Step',              kind:'Action',          color:'#4cd3a5', acc:'sneaky',    h3:'shoes', fx:'1 SMALL STEP', anim:'dash', art:'sneaky',   text:'Instead of drawing a Move Disc, move 1 space forward. This ends your turn.'},
-  b_fast:    {name:'Fast Pass',                 kind:'Action',          color:'#ff3b6b', acc:'target',    h3:'band',  fx:'FAST PASS!', anim:'lunge', art:'targeted',   text:'Draw Move Discs until one says Move 4 or Move 5, then use it. The others are thrown away. This ends your turn.'},
-  b_slow:    {name:'Slow and Steady',           kind:'Action',          color:'#b58a5a', acc:'pick',      h3:'hat',   fx:'SLOW & STEADY', anim:'hop', art:'dig',      text:'Draw a Move Disc. If it says Move 1, 2 or 3, move and then take another turn.'},
-  b_ditto:   {name:'Ditto',                     kind:'Action',          color:'#5fe0c8', acc:'clone',     h3:'orb',   fx:'DITTO!',     anim:'pop',   art:'clone',      text:'Use the Move Disc on top of the Move Discard Pile again, effects and all. This ends your turn.'},
-  b_flip:    {name:'Flip NOW',                  kind:'Reaction · NOW',  color:'#22c7b8', acc:'reverse',   h3:'swirl', fx:'FLIP!',      anim:'spin',  art:'reverse',    text:'Flip the board between Calm Mode and Chaos Mode. Every space changes.'},
-  b_magnet:  {name:'Add a Magnet NOW',          kind:'Reaction · NOW',  color:'#e6a23c', acc:'paw',       h3:'heart', fx:'MAGNET!',    anim:'hop',   art:'sticky',     text:'Secretly put a Danger Magnet anywhere in the Move Deck. Whoever draws it moves to the next Exploding Kitten space.'},
+  b_small:   {name:'1 Small Step',              kind:'Action',          color:'#4cd3a5', acc:'sneaky',    h3:'shoes', fx:'1 SMALL STEP', anim:'dash', text:'Instead of drawing a Move Disc, move 1 space forward. This ends your turn.'},
+  b_fast:    {name:'Fast Pass',                 kind:'Action',          color:'#ff3b6b', acc:'target',    h3:'band',  fx:'FAST PASS!', anim:'lunge', text:'Draw Move Discs until one says Move 4 or Move 5, then use it. The others are thrown away. This ends your turn.'},
+  b_slow:    {name:'Slow and Steady',           kind:'Action',          color:'#b58a5a', acc:'pick',      h3:'hat',   fx:'SLOW & STEADY', anim:'hop', text:'Draw a Move Disc. If it says Move 1, 2 or 3, move and then take another turn.'},
+  b_ditto:   {name:'Ditto',                     kind:'Action',          color:'#5fe0c8', acc:'clone',     h3:'orb',   fx:'DITTO!',     anim:'pop',   text:'Use the Move Disc on top of the Move Discard Pile again, effects and all. This ends your turn.'},
+  b_flip:    {name:'Flip NOW',                  kind:'Reaction · NOW',  color:'#22c7b8', acc:'reverse',   h3:'swirl', fx:'FLIP!',      anim:'spin',  text:'Flip the board between Calm Mode and Chaos Mode. Every space changes.'},
+  b_magnet:  {name:'Add a Magnet NOW',          kind:'Reaction · NOW',  color:'#e6a23c', acc:'paw',       h3:'heart', fx:'MAGNET!',    anim:'hop',   text:'Secretly put a Danger Magnet anywhere in the Move Deck. Whoever draws it moves to the next Exploding Kitten space.'},
   b_alter:   {name:'Alter the Future (2x) NOW', kind:'Reaction · NOW',  color:'#6f8bff', acc:'wandbolt',  h3:'orb',   fx:'ALTERED',    anim:'spin',  art:'alternow',   text:'Privately look at the top 2 Move Discs and put them back in any order.'},
   b_shuffle: {name:'Shuffle NOW',               kind:'Reaction · NOW',  color:'#ffb03a', acc:'swirlbolt', h3:'swirl', fx:'SHUFFLE NOW!', anim:'spin', art:'shufflenow', text:'Shuffle the Move Deck and the Move Discard Pile together, all face down.'},
   b_swap:    {name:'Swap Top and Bottom NOW',   kind:'Reaction · NOW',  color:'#38d0ff', acc:'swap',      h3:'swirl', fx:'SWAPPED',    anim:'spin',  art:'swap',       text:'Swap the top and bottom Move Discs.'},
@@ -3874,6 +3874,7 @@ const BoardView = (() => {
   const texCache = {}, discMats = {};
   const spaceTex = v => texCache[v] || (texCache[v] = canvasTex(spaceCanvas(v)));
   const sideMat = new THREE.MeshStandardMaterial({color: '#3a2c2c', roughness: .6});
+  const boardTex = {};
   let backMatD = null, built = false, chaos = false, flipping = false, plate = null, spaces = [], pawns = [], last = {};
   const discMat = t => discMats[t] || (discMats[t] = new THREE.MeshBasicMaterial({map: canvasTex(discCanvas(t))}));
   const DISC_GEO = new THREE.CylinderGeometry(.33, .33, .035, 40);
@@ -3886,8 +3887,10 @@ const BoardView = (() => {
   function build() {
     if (built) return; built = true;
     backMatD = new THREE.MeshBasicMaterial({map: canvasTex(discBackCanvas())});
-    plate = new THREE.Mesh(roundedBox(6.9, .08, 3.05, .03, 2), new THREE.MeshStandardMaterial({color: '#3d7fd9', roughness: .75}));
-    plate.position.set(-.2, .04, -1.12); grp.add(plate);
+    const pside = new THREE.MeshStandardMaterial({color: '#3d7fd9', roughness: .75}), ptop = new THREE.MeshBasicMaterial({color: '#3d7fd9'});
+    plate = new THREE.Mesh(roundedBox(6.9, .08, 3.6, .03, 2), [pside, pside, ptop, pside, pside, pside]);
+    plate.position.set(-.2, .04, -1.4); grp.add(plate);
+    ['calm', 'chaos'].forEach(n => new THREE.TextureLoader().load('boards/' + n + '.jpg', t => { t.encoding = THREE.sRGBEncoding; boardTex[n] = t; if (chaos === (n === 'chaos')) setMode(chaos); }));
     const curve = new THREE.CatmullRomCurve3(local.map(p => p.clone().setY(.1)));
     grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 200, .035, 6), new THREE.MeshStandardMaterial({color: '#ff9ec4', roughness: .5})));
     const loop = new THREE.CatmullRomCurve3([[2.1, -2.0], [2.55, -2.42], [.4, -2.55], [-1.4, -2.45], [-1.4, -2.27]].map(([x, z]) => new V3(x, .1, z)));
@@ -3913,7 +3916,9 @@ const BoardView = (() => {
   function setMode(ch) {
     chaos = ch; const L = B_LAYOUT[ch ? 'chaos' : 'calm'];
     for (let i = 1; i < B_RIB; i++) spaces[i].material[1].map = spaceTex(L[i]);
-    plate.material.color.set(ch ? '#c8332d' : '#3d7fd9');
+    const tx = boardTex[ch ? 'chaos' : 'calm'];
+    plate.material.forEach(m => m.color.set(ch ? '#c8332d' : '#3d7fd9'));
+    plate.material[2].map = tx || null; plate.material[2].color.set(tx ? '#ffffff' : ch ? '#c8332d' : '#3d7fd9'); plate.material[2].needsUpdate = true;
   }
   function layout() {
     const s = portrait() ? .74 : 1;
