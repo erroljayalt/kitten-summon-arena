@@ -4417,10 +4417,11 @@ async function pump() {
     if (!fast) { try { await animEvent(e); } catch (err) { console.warn(err); } }
     else logEvent(e);
     if (started !== view.started) break;
-    if (e.k !== 'tutorial') { view.mirror = e.after; applyMirror(fast); }  // cards are dealt after the video
+    if (e.k !== 'tutorial' && e.k !== 'tutorialEnd') { view.mirror = e.after; applyMirror(fast); }  // cards are dealt after the video
     updatePromptUI();
   }
   view.playing = false;
+  if (view.queue.length && started !== view.started) return pump();   // a new game started while the old one was animating
   updatePromptUI();
 }
 function anchorOf(s) {
