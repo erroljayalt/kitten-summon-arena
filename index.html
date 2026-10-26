@@ -107,6 +107,10 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .lbl.out{opacity:.55}
 .lbl.out b{text-decoration:line-through}
 .lbl.deck{font-family:var(--f-display);font-size:11px;letter-spacing:.06em}
+.lbl.mdeck{white-space:pre;text-align:center;line-height:1.5}
+.ptag{position:absolute;left:0;top:0;font-size:10px;font-weight:700;color:#1a1426;padding:1px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.chip.mode{color:#62b8ff;border-color:rgba(98,184,255,.5)}
+.chip.mode.chaos{color:#ff6b6b;border-color:rgba(255,107,107,.6)}
 #fx{position:absolute;left:0;top:0;font-family:var(--f-display);font-size:clamp(1.5rem,5vw,3rem);white-space:nowrap;opacity:0;color:var(--fxc,var(--holo));text-shadow:0 0 22px var(--fxc,var(--holo)),0 3px 0 #000}
 #fx.go{animation:fxpop 1.6s ease-out both}
 #tag{position:absolute;left:0;top:0;font-size:13px;white-space:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
@@ -180,7 +184,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .arena-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1a1540}
 .arena-card span{padding:7px 6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .arena-card[aria-pressed="true"]{border-color:var(--holo);box-shadow:0 0 0 1px var(--holo),0 0 22px -6px var(--holo)}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:#0e0b22}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:#0e0b22}
 .seg button{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:9px 10px;background:transparent;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
 .seg button i{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;box-sizing:border-box;flex:none}
 .seg button[aria-pressed="true"]{background:var(--holo);color:#0b0918;font-weight:600}
@@ -430,11 +434,12 @@ img[data-card]:focus-visible,.disc-item:focus-visible{outline:2px solid var(--ho
     <div id="stats">
       <span class="chip turn"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><ellipse cx="12" cy="16" rx="5" ry="4"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="9.5" cy="5.8" r="2.2"/><circle cx="14.5" cy="5.8" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/></g></svg><span id="turnChip">Dealing</span></span>
       <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="12" height="16" rx="2"/><path d="M5 7v12a2 2 0 0 0 2 2h9"/></svg><span class="t">Deck</span> <b id="deckCount">0</b></span>
-      <span class="chip kit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="14" r="7" fill="currentColor" stroke="none"/><path d="M14 9l3-3M18 2.5v2M21.5 6h-2M20.5 3.5l-1.2 1.2"/></svg><span class="t">Bombs</span> <b id="kitCount">0</b></span>
+      <span class="chip kit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="14" r="7" fill="currentColor" stroke="none"/><path d="M14 9l3-3M18 2.5v2M21.5 6h-2M20.5 3.5l-1.2 1.2"/></svg><span class="t" id="kitLbl">Bombs</span> <b id="kitCount">0</b></span>
     </div>
     <div class="chips">
       <span class="chip fxchip" id="dirChip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5M20 12a8 8 0 0 1-14 5"/><path d="M18 3v4h-4M6 21v-4h4"/></svg><span class="t">Reversed</span></span>
       <span class="chip fxchip sun" id="sunChip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span class="t">Sun Cat on shrine</span></span>
+      <span class="chip fxchip mode" id="modeChip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5M20 12a8 8 0 0 1-14 5"/><path d="M18 3v4h-4M6 21v-4h4"/></svg><span class="t" id="modeChipT">Calm mode</span></span>
       <span class="chip fxchip doom" id="doomChip" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c2 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 3 3 5 1-3 1-6 1-9z"/></svg><span class="t">Cat-astrophe</span></span>
       <button class="chipbtn micbtn" id="micBtn" aria-pressed="false" aria-label="Turn your mic on" hidden></button>
       <button class="chipbtn guide guide-open" aria-label="Card guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M9 8h7M9 12h5"/></svg><span class="t">Card guide</span></button>
@@ -452,6 +457,7 @@ img[data-card]:focus-visible,.disc-item:focus-visible{outline:2px solid var(--ho
   </div>
   <div id="labels"></div>
   <div class="lbl deck" id="deckLbl" hidden>Draw pile</div>
+  <div class="lbl deck mdeck" id="mdeckLbl" hidden>Move deck</div>
   <button class="lbl deck disc-lbl" id="discLbl" type="button" hidden>Discard pile</button>
   <div id="tag"></div>
   <div id="fx"></div>
@@ -581,6 +587,7 @@ img[data-card]:focus-visible,.disc-item:focus-visible{outline:2px solid var(--ho
       <button class="chipsel" role="tab" data-gtab="cards" aria-pressed="true">Cards</button>
       <button class="chipsel" role="tab" data-gtab="combos" aria-pressed="false">Combos</button>
       <button class="chipsel" role="tab" data-gtab="turn" aria-pressed="false">Turn basics</button>
+      <button class="chipsel" role="tab" data-gtab="board" aria-pressed="false">Board game</button>
       <label class="guide-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="guideSearch" placeholder="Search cards, e.g. nope, steal, future" aria-label="Search the card guide" autocomplete="off"></label>
     </div>
     <div class="guide-body" id="guideBody"></div>
@@ -649,6 +656,46 @@ const TYPES = {
   catastrophe:{name:'Cat-astrophe',         kind:'Action',             color:'#ff3a2a', acc:'meteor',   h3:'bomb',  fx:'CAT-ASTROPHE!', anim:'tremble', text:'Only playable while the Sun Cat is on the shrine. The Shadow Cat returns to the deck and can no longer be defused.'},
 };
 const CATS = ['toast','melon','disco','potato','cloud'];
+// Board game deck (Exploding Kittens: The Board Game). art: which painted picture the card borrows.
+Object.assign(TYPES, {
+  b_defuse:  {name:'Defuse',                    kind:'Rescue',          color:'#3ee0a1', acc:'hat',       fx:'DEFUSED!',       anim:'pop',   art:'defuse',     text:'Land on an Exploding Kitten space? Play this instead of exploding and stay where you are. It cannot be Noped.'},
+  b_nope:    {name:'Nope NOW',                  kind:'Reaction · NOW',  color:'#b3bccf', acc:'mask',      fx:'NOPE!',          anim:'shake', art:'nope',       text:'Stop an Action Card before it happens. Play one on a Nope NOW to make a Yup.'},
+  b_skip3:   {name:'Skip and Draw 3',           kind:'Action',          color:'#4cc6ff', acc:'shoes',     fx:'SKIP + DRAW 3',  anim:'dash',  art:'skip',       text:'Do not draw a Move Disc. Draw 3 Action Cards instead. This ends your turn.'},
+  b_draw5:   {name:'Draw to Five',              kind:'Action',          color:'#f2c14e', acc:'tower',     h3:'hat',   fx:'DRAW TO 5',  anim:'pop',   art:'tower',      text:'Draw Action Cards until you hold 5.'},
+  b_expose1: {name:'Expose the Future (1x)',    kind:'Action',          color:'#c08bff', acc:'megaphone', h3:'orb',   fx:'EXPOSED',    anim:'rise',  art:'reveal',     text:'Flip the next face-down Move Disc face up for everyone to see.'},
+  b_expose3: {name:'Expose the Future (3x)',    kind:'Action',          color:'#9d6bff', acc:'orb5',      h3:'orb',   fx:'EXPOSED x3', anim:'rise',  art:'future5',    text:'Flip the next 3 face-down Move Discs face up for everyone to see.'},
+  b_mega:    {name:'Mega Move',                 kind:'Action',          color:'#1fa2ff', acc:'rocket',    h3:'shoes', fx:'MEGA MOVE!', anim:'dash',  art:'superskip',  text:'Draw 2 Move Discs, add their numbers and move that far. Ignore what the discs say. This ends your turn.'},
+  b_bottom:  {name:'Draw From the Bottom',      kind:'Action',          color:'#5aa0ff', acc:'down',      h3:'shoes', fx:'FROM THE BOTTOM', anim:'rise', art:'bottom', text:'Draw the bottom Move Disc instead of the top one. This ends your turn.'},
+  b_small:   {name:'1 Small Step',              kind:'Action',          color:'#4cd3a5', acc:'sneaky',    h3:'shoes', fx:'1 SMALL STEP', anim:'dash', art:'sneaky',   text:'Instead of drawing a Move Disc, move 1 space forward. This ends your turn.'},
+  b_fast:    {name:'Fast Pass',                 kind:'Action',          color:'#ff3b6b', acc:'target',    h3:'band',  fx:'FAST PASS!', anim:'lunge', art:'targeted',   text:'Draw Move Discs until one says Move 4 or Move 5, then use it. The others are thrown away. This ends your turn.'},
+  b_slow:    {name:'Slow and Steady',           kind:'Action',          color:'#b58a5a', acc:'pick',      h3:'hat',   fx:'SLOW & STEADY', anim:'hop', art:'dig',      text:'Draw a Move Disc. If it says Move 1, 2 or 3, move and then take another turn.'},
+  b_ditto:   {name:'Ditto',                     kind:'Action',          color:'#5fe0c8', acc:'clone',     h3:'orb',   fx:'DITTO!',     anim:'pop',   art:'clone',      text:'Use the Move Disc on top of the Move Discard Pile again, effects and all. This ends your turn.'},
+  b_flip:    {name:'Flip NOW',                  kind:'Reaction · NOW',  color:'#22c7b8', acc:'reverse',   h3:'swirl', fx:'FLIP!',      anim:'spin',  art:'reverse',    text:'Flip the board between Calm Mode and Chaos Mode. Every space changes.'},
+  b_magnet:  {name:'Add a Magnet NOW',          kind:'Reaction · NOW',  color:'#e6a23c', acc:'paw',       h3:'heart', fx:'MAGNET!',    anim:'hop',   art:'sticky',     text:'Secretly put a Danger Magnet anywhere in the Move Deck. Whoever draws it moves to the next Exploding Kitten space.'},
+  b_alter:   {name:'Alter the Future (2x) NOW', kind:'Reaction · NOW',  color:'#6f8bff', acc:'wandbolt',  h3:'orb',   fx:'ALTERED',    anim:'spin',  art:'alternow',   text:'Privately look at the top 2 Move Discs and put them back in any order.'},
+  b_shuffle: {name:'Shuffle NOW',               kind:'Reaction · NOW',  color:'#ffb03a', acc:'swirlbolt', h3:'swirl', fx:'SHUFFLE NOW!', anim:'spin', art:'shufflenow', text:'Shuffle the Move Deck and the Move Discard Pile together, all face down.'},
+  b_swap:    {name:'Swap Top and Bottom NOW',   kind:'Reaction · NOW',  color:'#38d0ff', acc:'swap',      h3:'swirl', fx:'SWAPPED',    anim:'spin',  art:'swap',       text:'Swap the top and bottom Move Discs.'},
+});
+const BCOUNTS = {b_defuse: 5, b_nope: 5, b_skip3: 4, b_draw5: 3, b_expose1: 3, b_expose3: 3, b_mega: 3, b_bottom: 3, b_small: 3, b_fast: 3, b_slow: 3,
+  b_ditto: 3, b_flip: 3, b_magnet: 4, b_alter: 3, b_shuffle: 2, b_swap: 2, toast: 3, melon: 3, potato: 3};   // 64 Action Cards
+const BOARD_TYPES = Object.keys(BCOUNTS);
+const BORDER = ['b_defuse', 'b_nope', 'b_mega', 'b_fast', 'b_magnet', 'b_alter', 'b_flip', 'b_slow', 'b_small', 'b_draw5', 'b_skip3', 'b_expose3', 'b_expose1', 'b_bottom', 'b_ditto', 'b_shuffle', 'b_swap', 'toast', 'melon', 'potato'];
+const B_NOW = ['b_nope', 'b_magnet', 'b_alter', 'b_flip', 'b_shuffle', 'b_swap'];
+const B_PLAYABLE = BOARD_TYPES.filter(t => !['b_defuse', 'b_nope', 'toast', 'melon', 'potato'].includes(t));
+const B_RIB = 21, B_LOOP = 16;
+const B_LAYOUT = {
+  calm:  [0, 2, 3, 'K', 4, 2, 3, 1, 'K', 3, 2, 4, 2, 'K', 3, 1, 2, 'K', 3, 1, 0],
+  chaos: [0, 'K', 4, 2, 'K', 3, 'K', 4, 1, 'K', 3, 'K', 4, 2, 'K', 4, 'K', 3, 'K', 2, 'K'],
+};
+const DISCS = {
+  m1: {n: 1, label: 'Move 1'}, m2: {n: 2, label: 'Move 2'}, m3: {n: 3, label: 'Move 3'}, m4: {n: 4, label: 'Move 4'}, m5: {n: 5, label: 'Move 5'},
+  o1: {n: 1, or: true, label: 'Move 1 or Flip'}, o3: {n: 3, or: true, label: 'Move 3 or Flip'}, o5: {n: 5, or: true, label: 'Move 5 or Flip'},
+  f2: {n: 2, flip: true, label: 'Flip, then Move 2'}, f4: {n: 4, flip: true, label: 'Flip, then Move 4'},
+  cut: {n: 0, cut: true, label: 'Cut the Line'}, mag: {n: 0, mag: true, label: 'Danger Magnet'},
+};
+const START_DISCS = ['m1', 'm2', 'm3', 'm4', 'm5', 'o1', 'o3', 'o5', 'f2', 'f4', 'cut'];
+const FAST_OK = ['m4', 'm5', 'o5', 'f4'], SLOW_OK = ['m1', 'm2', 'm3', 'o1', 'o3', 'f2'];
+const handRank = (t, board) => board ? BORDER.indexOf(t) : ORDER.indexOf(t);
 const ORDER = ['defuse','undead','nope','sneaky','thirdeye','superskip','attack','targeted','haunted','skip','reverse','alternow','shufflenow','alter5','alter','future5','future','share','reveal','bottom','raise','dig','bury','bombstack','favor','sticky','mark','blindfold','tower','clone','suncat','catastrophe','feast','spirit','garbage','potluck','swap','shuffle','personal','howl','feral',...CATS,'boom','implode','shadow'];
 const CLASSIC_TYPES = ['defuse','nope','attack','skip','favor','future','shuffle',...CATS];
 const COUNTS = {attack:4, skip:4, favor:4, shuffle:4, future:5, nope:5, toast:4, melon:4, disco:4, potato:4, cloud:4};
@@ -658,7 +705,7 @@ const PARTY = {attack:3, skip:3, favor:3, shuffle:2, future:3, nope:4, toast:3, 
   howl:2, sneaky:1, undead:2, thirdeye:1, suncat:1, catastrophe:1};
 const SEAT_COLORS = ['#62f0ff','#ff9ec4','#f0b36a','#a8f07a','#c9b6ff','#ff7a7a','#ffd23f','#4cc6ff','#3ee0a1','#e6a23c','#b98bff','#ff5fa8','#9fd8ff','#c9a07a','#7fe08a'];
 const BOT_NAMES = ['Mochi','Biscuit','Tofu','Pickles','Nori','Waffles','Noodle','Sushi','Pudding','Dumpling','Peanut','Muffin','Ginger','Pepper'];
-const maxSeats = deck => deck === 'classic' ? 5 : 15;
+const maxSeats = deck => deck === 'classic' ? 5 : deck === 'board' ? 6 : 15;
 
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -880,10 +927,10 @@ const Announcer = (() => {
     clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('show'), ms);
   }
   function stopAudio() { if (cur) { cur.onended = cur.onerror = null; cur.pause(); cur = null; Sfx.duck(false); } }
-  function play(key, who, prio = 1, force = false) {
+  function play(key, who, prio = 1, force = false, idx = null) {
     if ((!on && !force) || !V[key]) return;
     if (cur && !cur.ended && prio <= curPrio && prio < 2) return;
-    const i = pick(key), text = caption(V[key][i]);
+    const i = idx != null && V[key][idx] ? idx : pick(key), text = caption(V[key][i]);
     showCaption(text, who, 2400 + text.length * 50);
     stopAudio();
     if (Sfx.muted) return;
@@ -900,11 +947,15 @@ const Announcer = (() => {
     const P = N(e.p);
     switch (e.k) {
       case 'kittens': line('start', '', 2); break;
+      case 'deal': if (view.snap.mode === 'board') line('start', '', 2); break;
+      case 'bdanger': line('boom', P, 2); break;
+      case 'bexplode': play('explode', P, 3, false, anyOf([1, 5, 8])); break;
+      case 'bflip': line('generic', P, 1); break;
       case 'turn': if (e.tl > 1) line('turnMulti', P, 1); else if (Math.random() < .45) line('turn', P, 0); break;
       case 'play': {
         if (e.defuse) { if (e.cards[0].t !== 'undead') line('defuse', P, 2); break; }
         if (e.forced) break;
-        const t = e.cards[0].t, ALIAS = {future5: 'future', alternow: 'alter', alter5: 'alter', shufflenow: 'shuffle', swap: 'shuffle'};
+        const t = e.cards[0].t, ALIAS = {future5: 'future', alternow: 'alter', alter5: 'alter', shufflenow: 'shuffle', swap: 'shuffle', b_shuffle: 'shuffle', b_swap: 'shuffle', b_skip3: 'skip', b_expose1: 'future', b_expose3: 'future', b_alter: 'alter', b_flip: 'reverse', b_magnet: 'bombstack', b_ditto: 'clone', b_mega: 'superskip', b_bottom: 'bottom'};
         line(e.n === 2 ? 'pair' : e.n === 3 ? 'triple' : (ALIAS[t] || t), P, 1);
         const left = (e.after.hands[e.p] || []).length;
         if (left === 1 && Math.random() < .5) setTimeout(() => line('tinyHand', P, 0), 2600);
@@ -2014,7 +2065,7 @@ try { me.nick = localStorage.getItem('ksa-nick') || ''; } catch (e) {}
 try { const l = JSON.parse(localStorage.getItem('ksa-look') || 'null'); me.look = l ? cleanLook(l) : randomLook(); } catch (e) { me.look = randomLook(); }
 me.stage = 'space';
 me.deck = 'party';
-try { if (localStorage.getItem('ksa-deck') === 'classic') me.deck = 'classic'; } catch (e) {}
+try { const dk = localStorage.getItem('ksa-deck'); if (dk === 'classic' || dk === 'board') me.deck = dk; } catch (e) {}
 try { const st = localStorage.getItem('ksa-stage'); if (STAGES.some(x => x[0] === st)) me.stage = st; } catch (e) {}
 $('#nick').value = me.nick;
 $('#nick').addEventListener('input', () => { me.nick = $('#nick').value.trim().slice(0, 16); try { localStorage.setItem('ksa-nick', me.nick); } catch (e) {} setPresence(); });
@@ -2551,7 +2602,7 @@ function showScreen(name) {
   $('#home').hidden = name !== 'home';
   $('#lobbyPanel').hidden = name !== 'lobby';
   const game = name === 'game';
-  $('#hud').hidden = !game; if (!game) setEmoTray(false); $('#bar').hidden = !game || view.mySeat < 0; $('#deckLbl').hidden = !game; $('#discLbl').hidden = !game; $('#labels').hidden = !game;
+  $('#hud').hidden = !game; if (!game) setEmoTray(false); $('#bar').hidden = !game || view.mySeat < 0; $('#deckLbl').hidden = !game; if (!game) $('#mdeckLbl').hidden = true; $('#discLbl').hidden = !game; $('#labels').hidden = !game;
   if (!game) { $('#react').hidden = true; $('#takeover').hidden = true; }
   view.screen = name;
   Sfx.music(game ? Sfx.tableTrack(currentStage) : 'lobby'); syncWakeLock();
@@ -2802,7 +2853,7 @@ async function emitEv(ev, wait = 0) {
   G.marked = G.marked.filter(id => G.hands.some(h => h.some(c => c.i === id)));
   ev.seq = ++G.seq;
   ev.after = clone({hands: G.hands, alive: G.alive, deckN: G.deck.length, kit: G.deck.filter(isKit).length, cur: G.cur, tl: G.tl, top: G.top,
-    fx: {dir: G.dir, marked: G.marked, blind: G.blind, sticky: G.sticky, tower: G.tower, howl: G.howl, shrine: G.shrine, doom: G.doom, imp: G.deck.indexOf('implodeUp')}});
+    fx: {dir: G.dir, marked: G.marked, blind: G.blind, sticky: G.sticky, tower: G.tower, howl: G.howl, shrine: G.shrine, doom: G.doom, imp: G.deck.indexOf('implodeUp')}, board: G.board ? boardPublic() : null});
   G.events.push(ev); if (G.events.length > 30) G.events.shift();
   await publish();
   if (wait) await sleep(wait);
@@ -2839,6 +2890,7 @@ function effectOk(s, e) {
   return true;
 }
 function validPlay(s, it) {
+  if (G.mode === 'board') return validPlayBoard(s, it);
   if (!Array.isArray(it.ids) || !it.ids.length || it.ids.length > 3 || new Set(it.ids).size !== it.ids.length) return false;
   const cards = it.ids.map(id => G.hands[s].find(c => c.i === id));
   if (cards.some(c => !c)) return false;
@@ -2851,15 +2903,16 @@ function validPlay(s, it) {
   return cards.length === 2 || (ORDER.includes(it.named) && !isKit(it.named));
 }
 function removeCards(s, cards) { const ids = new Set(cards.map(c => c.i)); G.hands[s] = G.hands[s].filter(c => !ids.has(c.i)); }
-const worstCard = s => [...G.hands[s]].sort((a, b) => ORDER.indexOf(b.t) - ORDER.indexOf(a.t))[0];
+const worstCard = s => [...G.hands[s]].sort((a, b) => handRank(b.t, G.mode === 'board') - handRank(a.t, G.mode === 'board'))[0];
+const nopeT = () => G && G.mode === 'board' ? 'b_nope' : 'nope';
 
 async function hostStart() {
   const L = lobby.data; if (!L || !lobby.hosting || L.seats.length < 2) return;
   await hostSyncSeats();
-  const mode = lobby.data.deck === 'classic' ? 'classic' : 'party';
+  const mode = ['classic', 'board'].includes(lobby.data.deck) ? lobby.data.deck : 'party';
   const seats = lobby.data.seats.slice(0, maxSeats(mode)).map((s, i) => ({...s, color: SEAT_COLORS[i % SEAT_COLORS.length]}));
   stopEngine();
-  G = newGameState(seats, L.code, true, mode);
+  G = mode === 'board' ? newBoardState(seats, L.code, true) : newGameState(seats, L.code, true, mode);
   G.stage = lobby.data.stage || 'space';
   try { await db.doc('lobbies/' + L.code).update({status: 'playing', updated: Date.now()}); } catch (e) {}
   if (!lobby.gameUnsub) watchGame(L.code);
@@ -2869,7 +2922,7 @@ function startSolo() {
   stopEngine();
   if (!me.id) me.id = 'local';
   const seats = [{kind: 'human', uid: me.id, nick: nickOrDefault(), look: me.look}, ...BOT_NAMES.slice(0, 3).map(n => ({kind: 'bot', uid: null, nick: n, look: botLook(n)}))].map((s, i) => ({...s, color: SEAT_COLORS[i]}));
-  G = newGameState(seats, 'solo', false, me.deck);
+  G = me.deck === 'board' ? newBoardState(seats, 'solo', false) : newGameState(seats, 'solo', false, me.deck);
   G.stage = me.stage;
   startEngine(true);
 }
@@ -2896,16 +2949,18 @@ async function startEngine(fresh) {
   const tok = ++engineTok;
   listenIntents();
   if (fresh) {
-    await emitEv({k: 'deal'}, 3400);
+    await emitEv({k: 'deal'}, G.mode === 'board' ? 2600 : 3400);
     if (!stillHost(tok)) return;
-    const kits = G.extra.filter(isKit).length;
-    await emitEv({k: 'kittens', n: kits, spare: G.extra.length - kits, list: G.extra}, 3000);
-    if (!stillHost(tok)) return;
+    if (G.mode !== 'board') {
+      const kits = G.extra.filter(isKit).length;
+      await emitEv({k: 'kittens', n: kits, spare: G.extra.length - kits, list: G.extra}, 3000);
+      if (!stillHost(tok)) return;
+    }
     G.cur = rand(G.seats.length); G.tl = 1;
     await emitEv({k: 'roulette', p: G.cur}, 6400);
   } else await publish();
   if (!stillHost(tok)) return;
-  await runEngine(tok);
+  await (G.mode === 'board' ? runBoard(tok) : runEngine(tok));
 }
 async function runEngine(tok) {
   while (stillHost(tok) && aliveN() > 1) {
@@ -3358,11 +3413,11 @@ function botWantsNope(b, ctx, cancelled) {
   }
   return ctx.actor === b && Math.random() < .45;
 }
-function nowCardsOf(p) { return G.hands[p].filter(c => NOW_TYPES.includes(c.t) && (c.t !== 'feast' || deadSeats().length)); }
+function nowCardsOf(p) { if (G.mode === 'board') return bNowCards(p); return G.hands[p].filter(c => NOW_TYPES.includes(c.t) && (c.t !== 'feast' || deadSeats().length)); }
 function nopeWindow(last, ctx, cancelled) {
   return new Promise(res => {
     const seats = G.seats.map((_, i) => i).filter(i => G.alive[i]);
-    const eligible = seats.filter(i => i !== last && G.hands[i].some(c => c.t === 'nope'));
+    const eligible = seats.filter(i => i !== last && G.hands[i].some(c => c.t === nopeT()));
     const humans = eligible.filter(i => isOnlineSeat(i));
     const now = {};
     for (const i of seats) if (isOnlineSeat(i)) { const nc = nowCardsOf(i); if (nc.length) now[i] = nc.map(c => ({i: c.i, t: c.t})); }
@@ -3378,6 +3433,7 @@ function nopeWindow(last, ctx, cancelled) {
   });
 }
 async function nowPlayG(p, id, target) {
+  if (G.mode === 'board') return bNowPlayG(p, id);
   const card = G.hands[p].find(c => c.i === id && NOW_TYPES.includes(c.t));
   if (!card || (card.t === 'feast' && !deadSeats().length)) return;
   removeCards(p, [card]); G.top = card.t;
@@ -3392,7 +3448,7 @@ async function nopeChain(ctx) {
     const w = await nopeWindow(last, ctx, cancelled);
     if (w == null || !G) break;
     if (typeof w === 'object') { await nowPlayG(w.now, w.id, w.target); continue; }
-    const card = G.hands[w].find(c => c.t === 'nope'); if (!card) break;
+    const card = G.hands[w].find(c => c.t === nopeT()); if (!card) break;
     removeCards(w, [card]); G.top = 'nope'; cancelled = !cancelled; last = w; any = true;
     await emitEv({k: 'nope', p: w, card, cancelled, actor: ctx.actor}, 1600);
   }
@@ -3408,6 +3464,577 @@ function takeOver() {
   startEngine(false);
 }
 $('#takeover').addEventListener('click', takeOver);
+
+/* ======================= Board game mode (Exploding Kittens: The Board Game) ======================= */
+// Space 0 is the Litter Box (start; any number of cats), 1..20 are track spaces, 21 is the Ribbon (finish).
+// Moving past the Ribbon follows the loop-back arrow to space B_LOOP. 'K' = Exploding Kitten space; a number = draw that many Action Cards.
+function newBoardState(seats, code, online) {
+  const g = newGameState(seats, code, online, 'classic');
+  const pool = []; for (const [t, n] of Object.entries(BCOUNTS)) for (let i = 0; i < n; i++) pool.push(t);
+  shuffleArr(pool);
+  let uid = 0;
+  const hands = seats.map(() => []);
+  for (let r = 0; r < 5; r++) for (let s = 0; s < seats.length; s++) hands[s].push({i: ++uid, t: pool.pop()});
+  return Object.assign(g, {mode: 'board', hands, deck: pool, extra: [], uid, bdis: [],
+    board: {pos: seats.map(() => 0), chaos: false, mdeck: shuffleArr([...START_DISCS]).map(t => ({t, up: false})), mdis: [], mags: 10}});
+}
+// What every screen may know about the board (the Move Deck order stays secret except face-up discs).
+function boardPublic() {
+  const b = G.board;
+  return {pos: [...b.pos], chaos: b.chaos, mdN: b.mdeck.length, mdisN: b.mdis.length, mtop: b.mdis[b.mdis.length - 1] || null, mags: b.mags,
+    up: b.mdeck.map((d, i) => d.up ? {i, t: d.t} : null).filter(Boolean)};
+}
+const bLayout = () => B_LAYOUT[G.board.chaos ? 'chaos' : 'calm'];
+const bStep = i => i >= B_RIB ? B_LOOP : i + 1;
+const bTaken = (i, except) => i > 0 && G.board.pos.some((q, j) => j !== except && q === i);
+// Spaces passed while moving n, then hopping past other cats: only one cat per space (the Litter Box holds any number).
+function bPath(p, n) {
+  const path = []; let i = G.board.pos[p];
+  for (let k = 0; k < n; k++) { i = bStep(i); path.push(i); }
+  while (path.length && i !== B_RIB && bTaken(i, p)) { i = bStep(i); path.push(i); }
+  return path;
+}
+const bNowCards = p => G.hands[p].filter(c => B_NOW.includes(c.t) && c.t !== 'b_nope' && (c.t !== 'b_magnet' || G.board.mags > 0) && (c.t !== 'b_alter' || G.board.mdeck.length > 1));
+function bCanPlay(t) {
+  if (!B_PLAYABLE.includes(t)) return false;
+  if (t === 'b_ditto') return G.board.mdis.length > 0;
+  if (t === 'b_magnet') return G.board.mags > 0;
+  return true;
+}
+function validPlayBoard(s, it) {
+  if (!Array.isArray(it.ids) || !it.ids.length || it.ids.length > 2 || new Set(it.ids).size !== it.ids.length) return false;
+  const cards = it.ids.map(id => G.hands[s].find(c => c.i === id));
+  if (cards.some(c => !c)) return false;
+  if (cards.length === 2) return CATS.includes(cards[0].t) && cards[0].t === cards[1].t && Number.isInteger(it.target) && it.target !== s && it.target >= 0 && it.target < G.seats.length && G.hands[it.target].length > 0;
+  return bCanPlay(cards[0].t);
+}
+
+async function runBoard(tok) {
+  while (stillHost(tok) && G.status === 'playing') {
+    const s = G.cur; G.tl = 1;
+    await emitEv({k: 'turn', p: s, tl: 1}, 900);
+    if (!stillHost(tok)) return;
+    const r = await bTurnG(s, tok);
+    if (!stillHost(tok) || G.status !== 'playing') return;
+    if (r && r.extra) { await note('Slow and steady wins an extra turn for {0}!', [s], {banner: true}, 1200); continue; }
+    G.cur = (s + 1) % G.seats.length;
+  }
+}
+async function bTurnG(s, tok) {
+  if (!G.hands[s].length) await bDrawCardsG(s, 3, 'empty');
+  if (!isHuman(s)) return botBoardTurn(s, tok);
+  for (;;) {
+    const it = await waitInput(s, 'turn', {}, 75000, () => ({k: 'auto'}));
+    if (!stillHost(tok)) return null;
+    if (it.k === 'auto') return botBoardTurn(s, tok);
+    if (it.k === 'draw') return bDiscTurnG(s, 'top');
+    if (it.k === 'play') {
+      const out = await bActionG(s, it.ids.map(id => G.hands[s].find(c => c.i === id)), it);
+      if (out || G.status !== 'playing') return out;
+    }
+  }
+}
+async function bActionG(s, cards, o = {}) {
+  if (!cards.length || cards.some(c => !c)) return null;
+  const n = cards.length, t = cards[0].t;
+  if (n === 2) {
+    const cands = G.seats.map((_, i) => i).filter(i => i !== s && G.hands[i].length);
+    if (!cands.length) return null;
+    const target = cands.includes(o.target) ? o.target : botTarget(s, cands, 'favor');
+    removeCards(s, cards); cards.forEach(c => G.bdis.push(c.t)); G.top = t;
+    await emitEv({k: 'play', p: s, cards, n, target, victim: target}, 1600);
+    if (await nopeChain({actor: s, type: 'combo', cardType: t, target, victim: target, n})) return null;
+    if (G.hands[target].length) await transferG(target, s, anyOf(G.hands[target]), 'steal');
+    return null;
+  }
+  if (!bCanPlay(t)) return null;
+  removeCards(s, cards); G.bdis.push(t); G.top = t;
+  await emitEv({k: 'play', p: s, cards, n: 1, target: null}, 1600);
+  if (await nopeChain({actor: s, type: t, cardType: t, n: 1})) return null;
+  return bEffectG(s, t);
+}
+// What each Action Card does. Returns {k: 'done'} when the card ends the turn.
+async function bEffectG(s, t) {
+  const b = G.board;
+  switch (t) {
+    case 'b_skip3': await bDrawCardsG(s, 3, 'skip'); return {k: 'done'};
+    case 'b_draw5': {
+      const n = 5 - G.hands[s].length;
+      if (n > 0) await bDrawCardsG(s, n, 'draw5'); else await note('Draw to Five does nothing: already 5 cards for {1}.', [s, s]);
+      return null;
+    }
+    case 'b_expose1': case 'b_expose3': await bExposeG(s, t === 'b_expose3' ? 3 : 1); return null;
+    case 'b_mega': {
+      await bPreDrawG(s); if (G.status !== 'playing') return {k: 'done'};
+      const a = await bDrawDiscG(s, 'top', true), c = await bDrawDiscG(s, 'top', true), n = DISCS[a].n + DISCS[c].n;
+      if (!n) { await note('Two zeros! No move for {0} this time.', [s, s]); return {k: 'done'}; }
+      await note('Mega Move: {n} spaces!', [s], {n, banner: true}, 700);
+      await bMoveG(s, bPath(s, n)); return {k: 'done'};
+    }
+    case 'b_bottom': return bDiscTurnG(s, 'bottom');
+    case 'b_small': await bMoveG(s, bPath(s, 1)); return {k: 'done'};
+    case 'b_fast': {
+      await bPreDrawG(s); if (G.status !== 'playing') return {k: 'done'};
+      for (let k = 0; k < 30 && G.status === 'playing'; k++) {
+        const d = await bDrawDiscG(s, 'top', x => !FAST_OK.includes(x));
+        if (FAST_OK.includes(d)) { await bResolveDiscG(s, d); break; }
+      }
+      return {k: 'done'};
+    }
+    case 'b_slow': {
+      const r = await bDiscTurnG(s, 'top');
+      return {k: 'done', extra: G.status === 'playing' && SLOW_OK.includes(r.disc)};
+    }
+    case 'b_ditto': {
+      const d = b.mdis[b.mdis.length - 1];
+      if (!d) { await note('The Move Discard Pile is empty, so Ditto does nothing.', [s]); return null; }
+      await emitEv({k: 'disc', p: s, disc: d, from: 'ditto'}, 1600);
+      await bResolveDiscG(s, d); return {k: 'done'};
+    }
+    case 'b_flip': await bFlipG(s); return null;
+    case 'b_magnet': await bAddMagnetG(s); return null;
+    case 'b_alter': await bAlterG(s); return null;
+    case 'b_shuffle':
+      b.mdeck = shuffleArr([...b.mdeck.map(d => d.t), ...b.mdis]).map(x => ({t: x, up: false})); b.mdis = [];
+      await emitEv({k: 'mshuffle', p: s}, 1100); return null;
+    case 'b_swap':
+      if (b.mdeck.length > 1) { const L = b.mdeck.length - 1; [b.mdeck[0], b.mdeck[L]] = [b.mdeck[L], b.mdeck[0]]; }
+      await emitEv({k: 'mswap', p: s}, 1000); return null;
+  }
+  return null;
+}
+async function bDrawCardsG(p, n, why) {
+  const cards = [];
+  for (let k = 0; k < n; k++) {
+    if (!G.deck.length) {
+      if (!G.bdis.length) break;
+      G.deck = shuffleArr(G.bdis); G.bdis = [];
+      await note('The Action Discard Pile is shuffled into a fresh Action Deck.', [p], {sfx: 'shuffle'}, 700);
+    }
+    const c = {i: ++G.uid, t: G.deck.shift()}; G.hands[p].push(c); cards.push(c);
+  }
+  if (cards.length) await emitEv({k: 'bcards', p, cards, why}, 600 + cards.length * 230);
+}
+// Draw a Move Disc. ignore: true (or a test on the disc) means its effect is thrown away.
+async function bDrawDiscG(p, from = 'top', ignore = false) {
+  const b = G.board;
+  if (!b.mdeck.length) {
+    b.mdeck = shuffleArr(b.mdis).map(t => ({t, up: false})); b.mdis = [];
+    await emitEv({k: 'mshuffle', p, refill: true}, 900);
+  }
+  const d = from === 'bottom' ? b.mdeck.pop() : b.mdeck.shift();
+  b.mdis.push(d.t);
+  const ign = typeof ignore === 'function' ? ignore(d.t) : ignore;
+  await emitEv({k: 'disc', p, disc: d.t, from, ignore: ign}, ign ? 1300 : 1700);
+  return d.t;
+}
+async function bDiscTurnG(s, from) {
+  await bPreDrawG(s);
+  if (G.status !== 'playing') return {k: 'done'};
+  const d = await bDrawDiscG(s, from);
+  await bResolveDiscG(s, d);
+  return {k: 'done', disc: d};
+}
+async function bResolveDiscG(p, t) {
+  const D = DISCS[t];
+  if (D.mag) return bMagnetMoveG(p);
+  if (D.cut) return bCutG(p);
+  if (D.or) {
+    const v = await choiceG(p, {title: `Move ${D.n} or flip the board?`, text: 'Move forward, or flip the board and stay where you are.', card: 'disc_' + t,
+      opts: [{label: `Move ${D.n}`, value: 'move', cls: 'ok'}, {label: 'Flip the board', value: 'flip'}]}, botOrFlip(p, D.n));
+    if (v === 'flip') return bFlipG(p);
+  } else if (D.flip) await bFlipG(p);
+  await bMoveG(p, bPath(p, D.n));
+}
+async function bMoveG(p, path) {
+  if (!path.length) return;
+  G.board.pos[p] = path[path.length - 1];
+  await emitEv({k: 'bmove', p, path}, 450 + path.length * 280);
+  if (G.board.pos[p] === B_RIB) return bWinG(p);
+  const sp = bLayout()[G.board.pos[p]];
+  if (sp === 'K') return bKittenG(p);
+  if (sp > 0) await bDrawCardsG(p, sp, 'space');
+}
+async function bFlipG(p) {
+  G.board.chaos = !G.board.chaos;
+  await emitEv({k: 'bflip', p, chaos: G.board.chaos}, 1700);
+}
+// Danger Magnet: forward to the next Exploding Kitten space (looping back past the Ribbon if needed).
+async function bMagnetMoveG(p) {
+  const L = bLayout(), path = []; let i = G.board.pos[p];
+  for (let k = 0; k < 40; k++) { i = bStep(i); path.push(i); if (L[i] === 'K') break; }
+  if (L[i] !== 'K') return note('No Exploding Kitten space ahead of {1}. Lucky!', [p, p]);
+  while (i !== B_RIB && bTaken(i, p)) { i = bStep(i); path.push(i); }
+  await bMoveG(p, path);
+}
+// Cut the Line: to the first free space in front of the next cat ahead. First place stays put.
+async function bCutG(p) {
+  const mine = G.board.pos[p], ahead = G.board.pos.filter((q, j) => j !== p && q > mine);
+  if (!ahead.length) return note('Cut the Line does nothing for the race leader: {1}.', [p, p]);
+  await bMoveG(p, bPath(p, Math.min(...ahead) + 1 - mine));
+}
+async function bKittenG(p) {
+  await emitEv({k: 'bdanger', p}, 1500);
+  const def = G.hands[p].find(c => c.t === 'b_defuse');
+  if (def) {
+    const use = await choiceG(p, {title: 'Exploding Kitten space!', text: 'Play your Defuse and stay safe on this space, or explode: you swap places with the cat in last place and discard down to 3 cards.', card: 'b_defuse',
+      opts: [{label: 'Play Defuse', value: true, cls: 'ok'}, {label: 'Explode', value: false, cls: 'alt'}]}, true);
+    if (use) {
+      removeCards(p, [def]); G.bdis.push(def.t); G.top = def.t;
+      await emitEv({k: 'play', p, cards: [def], n: 1, target: null, defuse: true}, 1600);
+      return;
+    }
+  }
+  const others = G.seats.map((_, j) => j).filter(j => j !== p), min = Math.min(...others.map(j => G.board.pos[j]));
+  let w = null;
+  if (G.board.pos[p] > min) {
+    const tied = others.filter(j => G.board.pos[j] === min);
+    w = tied.length === 1 ? tied[0] : await choiceG(p, {title: 'Swap with who?', text: 'These cats are tied for last place. Pick one to swap spaces with.', opts: tied.map(j => ({label: G.seats[j].nick, value: j}))}, anyOf(tied));
+  }
+  const from = G.board.pos[p], to = w == null ? from : G.board.pos[w];
+  if (w != null) { G.board.pos[w] = from; G.board.pos[p] = to; }
+  if (!isHuman(p)) botEmote(p, anyOf(['exploded', 'crying', 'angry']));
+  await emitEv({k: 'bexplode', p, w, from, to}, 2400);
+  const lost = [];
+  while (G.hands[p].length > 3) {
+    const c = await pickCardG(p, 'Discard a card', `You exploded! Discard down to 3 cards (${G.hands[p].length - 3} to go).`);
+    if (!c) break;
+    removeCards(p, [c]); G.bdis.push(c.t); lost.push(c);
+  }
+  if (lost.length) await emitEv({k: 'bdiscard', p, lost}, 600 + lost.length * 130);
+}
+async function bWinG(p) {
+  G.status = 'over'; G.winner = p; G.prompt = null; G.nope = null;
+  if (!isHuman(p)) botEmote(p, 'party');
+  G.seats.forEach((_, b) => { if (b !== p && !isHuman(b) && Math.random() < .5) botEmote(b, anyOf(['gg', 'crying', 'facepalm'])); });
+  await emitEv({k: 'win', p});
+  if (G.online) db.doc('lobbies/' + G.code).update({status: 'open', updated: Date.now()}).catch(() => {});
+}
+async function bExposeG(p, k) {
+  let n = 0;
+  for (const d of G.board.mdeck) { if (n >= k) break; if (!d.up) { d.up = true; n++; } }
+  await emitEv({k: 'expose', p, n}, 1400);
+}
+async function bAddMagnetG(p) {
+  const b = G.board;
+  if (b.mags <= 0) { await note('There are no Danger Magnets left to add.', [p]); return; }
+  const N = b.mdeck.length;
+  let idx;
+  if (isHuman(p)) {
+    const it = await waitInput(p, 'hide', {n: N, title: 'Add a Danger Magnet', text: 'Secretly put it anywhere in the Move Deck. Top means the very next disc anyone draws.', unit: 'discs'}, 20000, () => ({idx: -1}));
+    idx = typeof it.idx === 'number' && it.idx >= 0 ? Math.min(N, Math.floor(it.idx)) : rand(N + 1);
+  } else idx = G.cur !== p ? 0 : Math.min(N, 1);
+  b.mdeck.splice(idx, 0, {t: 'mag', up: false}); b.mags--;
+  await emitEv({k: 'magnet', p}, 1300);
+}
+async function bAlterG(p) {
+  const b = G.board, top = b.mdeck.slice(0, 2);
+  if (top.length < 2) { await note('Only 1 disc is left in the Move Deck, so Alter the Future does nothing.', [p]); return; }
+  let order = [0, 1];
+  if (isHuman(p)) {
+    const it = await waitInput(p, 'arrange', {cards: top.map(d => 'disc_' + d.t), title: 'Put the top 2 Move Discs in any order'}, 30000, () => ({order: [0, 1]}));
+    if (Array.isArray(it.order) && it.order.length === 2 && it.order.includes(0) && it.order.includes(1)) order = it.order;
+  } else {
+    const bad = d => d.t === 'mag', badFirst = G.cur !== p;
+    if (bad(top[0]) !== bad(top[1])) order = bad(top[0]) === badFirst ? [0, 1] : [1, 0];
+  }
+  b.mdeck.splice(0, 2, ...order.map(i => top[i]));
+  await emitEv({k: 'malter', p}, 1000);
+}
+// Before a Move Disc is drawn, the other players get a short chance to play NOW cards.
+async function bPreDrawG(actor) {
+  for (let guard = 0; guard < 6 && G && G.status === 'playing'; guard++) {
+    const now = {}; let humans = false;
+    G.seats.forEach((_, i) => { if (i !== actor && isOnlineSeat(i)) { const nc = bNowCards(i); if (nc.length) { now[i] = nc.map(c => ({i: c.i, t: c.t})); humans = true; } } });
+    const bot = botPreDraw(actor);
+    if (!humans && !bot) return;
+    const ms = humans ? 3600 : 900;
+    const w = await new Promise(res => {
+      const id = ++G.pid; let done = false; const timers = [];
+      const fire = v => { if (done) return; done = true; timers.forEach(clearTimeout); nopeWait = null; if (G) G.nope = null; res(v); };
+      nopeWait = {id, eligible: [], now, fire};
+      if (bot) timers.push(setTimeout(() => fire({now: bot.p, id: bot.card.i}), 400 + Math.random() * (ms - 600)));
+      timers.push(setTimeout(() => fire(null), ms));
+      if (humans) { G.nope = {id, eligible: [], now, ms, pre: true, actor, cardType: 'b_nope', n: 1, afterSeq: G.seq}; publish(); }
+    });
+    if (w == null || !G) return;
+    await bNowPlayG(w.now, w.id);
+  }
+}
+async function bNowPlayG(p, id) {
+  const card = bNowCards(p).find(c => c.i === id); if (!card) return;
+  removeCards(p, [card]); G.bdis.push(card.t); G.top = card.t;
+  await emitEv({k: 'play', p, cards: [card], n: 1, target: null, now: true}, 1400);
+  if (await nopeChain({actor: p, type: card.t, cardType: card.t, n: 1})) return;
+  await bEffectG(p, card.t);
+}
+
+/* ---------- Board bots ---------- */
+function botPreDraw(actor) {
+  for (let i = 0; i < G.seats.length; i++) {
+    if (i === actor || isHuman(i)) continue;
+    const nc = bNowCards(i), mag = nc.find(c => c.t === 'b_magnet'), fl = nc.find(c => c.t === 'b_flip');
+    if (mag && G.board.pos[actor] >= G.board.pos[i] && Math.random() < .35) return {p: i, card: mag};
+    if (fl && G.board.pos[actor] >= 15 && Math.random() < .25) return {p: i, card: fl};
+  }
+  return null;
+}
+function botOrFlip(p, n) {
+  const path = bPath(p, n), land = path[path.length - 1];
+  return land !== B_RIB && bLayout()[land] === 'K' && !G.hands[p].some(c => c.t === 'b_defuse') ? 'flip' : 'move';
+}
+function botBoardPlan(s) {
+  const hand = G.hands[s], one = t => hand.find(c => c.t === t), b = G.board, top = b.mdeck[0];
+  let badTop = false;
+  if (top && top.up) { const path = bPath(s, DISCS[top.t].n); badTop = top.t === 'mag' || (path.length > 0 && bLayout()[path[path.length - 1]] === 'K'); }
+  if (badTop) for (const t of ['b_shuffle', 'b_swap', 'b_fast', 'b_small', 'b_skip3', 'b_bottom', 'b_mega']) if (one(t)) return {cards: [one(t)]};
+  if (one('b_draw5') && hand.length <= 2) return {cards: [one('b_draw5')]};
+  for (const t of CATS) {
+    const h = hand.filter(c => c.t === t);
+    if (h.length >= 2 && Math.random() < .55) {
+      const cands = G.seats.map((_, i) => i).filter(i => i !== s && G.hands[i].length);
+      if (cands.length) return {cards: h.slice(0, 2), target: botTarget(s, cands, 'favor')};
+    }
+  }
+  if (top && !top.up && Math.random() < .25) { const e = one('b_expose3') || one('b_expose1'); if (e) return {cards: [e]}; }
+  if (one('b_magnet') && b.mags > 0 && Math.random() < .25) return {cards: [one('b_magnet')]};
+  if (one('b_alter') && b.mdeck.length > 1 && Math.random() < .15) return {cards: [one('b_alter')]};
+  for (const [t, pr] of [['b_mega', .4], ['b_slow', .35], ['b_fast', .3], ['b_ditto', .2]]) if (one(t) && Math.random() < pr && (t !== 'b_ditto' || b.mdis.length)) return {cards: [one(t)]};
+  return null;
+}
+async function botBoardTurn(s, tok) {
+  await sleep(700);
+  for (let k = 0; k < 3; k++) {
+    if (!stillHost(tok)) return null;
+    const plan = botBoardPlan(s); if (!plan) break;
+    const out = await bActionG(s, plan.cards, plan);
+    if (out || G.status !== 'playing') return out;
+    await sleep(400);
+  }
+  if (!stillHost(tok) || G.status !== 'playing') return null;
+  return bDiscTurnG(s, 'top');
+}
+
+/* ======================= Board game: the board, pawns and Move Discs on the table ======================= */
+function discCanvas(t) {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), D = DISCS[t];
+  const col = D.mag ? '#1f1b24' : D.cut ? '#3cb54a' : D.or ? '#7b4fd1' : D.flip ? '#14a394' : '#ff6a3d';
+  g.fillStyle = col; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();
+  g.lineWidth = 7; g.strokeStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(128, 128, 112, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = D.mag ? '#ffd23f' : '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const line = (txt, y, size) => { g.font = `${size}px Bungee, Impact, sans-serif`; g.fillText(txt, 128, y); };
+  if (D.mag) { line('DANGER', 104, 36); line('MAGNET', 146, 36); line('-0-', 192, 24); }
+  else if (D.cut) { line('CUT', 100, 50); line('THE LINE', 150, 32); line('-0-', 194, 24); }
+  else if (D.or) { line('MOVE', 66, 28); line(String(D.n), 112, 62); line('OR', 156, 24); line('FLIP', 192, 32); }
+  else if (D.flip) { line('FLIP', 70, 34); line('THEN MOVE', 114, 22); line(String(D.n), 168, 66); }
+  else { line('MOVE', 82, 36); line(String(D.n), 152, 100); }
+  return c;
+}
+function discBackCanvas() {
+  return makeCanvas(256, (g, s) => {
+    g.fillStyle = '#f6e3bd'; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();
+    g.lineWidth = 7; g.strokeStyle = '#e07a3a'; g.beginPath(); g.arc(128, 128, 112, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = '#e8583a';
+    g.beginPath(); g.ellipse(128, 150, 44, 36, 0, 0, Math.PI * 2); g.fill();
+    [[78, 104], [108, 78], [148, 78], [178, 104]].forEach(([x, y]) => { g.beginPath(); g.ellipse(x, y, 17, 21, 0, 0, Math.PI * 2); g.fill(); });
+  });
+}
+function spaceCanvas(v) {
+  return makeCanvas(128, (g, s) => {
+    const kit = v === 'K';
+    g.fillStyle = '#2b2024'; g.beginPath(); g.arc(64, 64, 64, 0, Math.PI * 2); g.fill();
+    g.fillStyle = kit ? '#ff7a1a' : '#ffd23f'; g.beginPath(); g.arc(64, 64, 56, 0, Math.PI * 2); g.fill();
+    if (kit) {
+      g.fillStyle = '#2b2024'; g.beginPath(); g.arc(60, 70, 27, 0, Math.PI * 2); g.fill();
+      g.fillRect(70, 34, 14, 14);
+      g.strokeStyle = '#2b2024'; g.lineWidth = 4; g.beginPath(); g.moveTo(80, 36); g.quadraticCurveTo(92, 22, 98, 28); g.stroke();
+      g.fillStyle = '#fff3a8'; g.beginPath(); g.arc(99, 26, 7, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(50, 62, 6, 0, Math.PI * 2); g.fill();
+    } else {
+      g.fillStyle = '#2b2024'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '62px Bungee, Impact, sans-serif'; g.fillText(String(v), 64, 70);
+    }
+  });
+}
+function labelCanvas(text, bg, fg) {
+  return makeCanvas(256, (g, s) => {
+    g.fillStyle = bg; rr(g, 6, 6, 244, 244, 40); g.fill();
+    g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '48px Bungee, Impact, sans-serif'; g.fillText(text, 128, 132);
+  });
+}
+
+const BoardView = (() => {
+  const grp = new THREE.Group(); grp.visible = false; scene.add(grp);
+  const deckG = new THREE.Group(); deckG.visible = false; scene.add(deckG);
+  const local = [];
+  for (let i = 0; i <= B_RIB; i++) {
+    if (i === 0) { local.push(new V3(-2.95, 0, -.2)); continue; }
+    const r = Math.floor((i - 1) / 7), k = (i - 1) % 7;
+    local.push(new V3(-2.1 + (r === 1 ? 6 - k : k) * .7, 0, -.2 - r * .9));
+  }
+  const texCache = {}, discMats = {};
+  const spaceTex = v => texCache[v] || (texCache[v] = canvasTex(spaceCanvas(v)));
+  const sideMat = new THREE.MeshStandardMaterial({color: '#3a2c2c', roughness: .6});
+  let backMatD = null, built = false, chaos = false, flipping = false, plate = null, spaces = [], pawns = [], last = {};
+  const discMat = t => discMats[t] || (discMats[t] = new THREE.MeshBasicMaterial({map: canvasTex(discCanvas(t))}));
+  const DISC_GEO = new THREE.CylinderGeometry(.33, .33, .035, 40);
+  const DISC_FLY = DISC_GEO.clone().rotateY(Math.PI / 2).rotateX(Math.PI / 2);   // face on +z, so it can face the camera
+  const qUp = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+  const portrait = () => isPortrait();
+  const mdPos = () => new V3(portrait() ? -.6 : -.8, 0, portrait() ? .95 : .8);
+  const mdisPos = () => new V3(portrait() ? .6 : .8, 0, portrait() ? .95 : .8);
+
+  function build() {
+    if (built) return; built = true;
+    backMatD = new THREE.MeshBasicMaterial({map: canvasTex(discBackCanvas())});
+    plate = new THREE.Mesh(roundedBox(6.9, .08, 3.05, .03, 2), new THREE.MeshStandardMaterial({color: '#3d7fd9', roughness: .75}));
+    plate.position.set(-.2, .04, -1.12); grp.add(plate);
+    const curve = new THREE.CatmullRomCurve3(local.map(p => p.clone().setY(.1)));
+    grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 200, .035, 6), new THREE.MeshStandardMaterial({color: '#ff9ec4', roughness: .5})));
+    const loop = new THREE.CatmullRomCurve3([[2.1, -2.0], [2.55, -2.42], [.4, -2.55], [-1.4, -2.45], [-1.4, -2.27]].map(([x, z]) => new V3(x, .1, z)));
+    const gold = new THREE.MeshStandardMaterial({color: '#ffd23f', roughness: .4, emissive: '#6b4a00', emissiveIntensity: .4});
+    grp.add(new THREE.Mesh(new THREE.TubeGeometry(loop, 60, .04, 6), gold));
+    const head = new THREE.Mesh(new THREE.ConeGeometry(.1, .2, 12), gold); head.rotation.x = Math.PI / 2; head.position.set(-1.4, .1, -2.2); grp.add(head);
+    const geo = new THREE.CylinderGeometry(.27, .27, .07, 32);
+    for (let i = 1; i < B_RIB; i++) {
+      const m = new THREE.Mesh(geo, [sideMat, new THREE.MeshBasicMaterial({map: spaceTex(2)}), sideMat]);
+      m.position.copy(local[i]).setY(.115); m.rotation.y = Math.PI / 2; grp.add(m); spaces[i] = m;
+    }
+    const box = new THREE.Mesh(new THREE.BoxGeometry(.78, .2, .78), [sideMat, sideMat, new THREE.MeshBasicMaterial({map: canvasTex(labelCanvas('START', '#8b6a43', '#fff3d6'))}), sideMat, sideMat, sideMat]);
+    box.position.copy(local[0]).setY(.18); grp.add(box);
+    const rib = new THREE.Mesh(new THREE.CylinderGeometry(.36, .36, .08, 36), [sideMat, new THREE.MeshBasicMaterial({map: canvasTex(labelCanvas('WIN', '#b05be0', '#fff'))}), sideMat]);
+    rib.position.copy(local[B_RIB]).setY(.12); rib.rotation.y = Math.PI / 2; grp.add(rib);
+    const gift = new THREE.Group(); gift.position.copy(local[B_RIB]).setY(.3); grp.add(gift);
+    gift.add(new THREE.Mesh(new THREE.BoxGeometry(.26, .2, .26), new THREE.MeshStandardMaterial({color: '#ff5fa8'})));
+    const rb = new THREE.MeshStandardMaterial({color: '#ffd23f'});
+    gift.add(new THREE.Mesh(new THREE.BoxGeometry(.28, .21, .06), rb)); gift.add(new THREE.Mesh(new THREE.BoxGeometry(.06, .21, .28), rb));
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(.07, .025, 8, 16), rb); bow.position.y = .14; gift.add(bow);
+    gift.userData.spin = true; last.gift = gift;
+  }
+  function setMode(ch) {
+    chaos = ch; const L = B_LAYOUT[ch ? 'chaos' : 'calm'];
+    for (let i = 1; i < B_RIB; i++) spaces[i].material[1].map = spaceTex(L[i]);
+    plate.material.color.set(ch ? '#c8332d' : '#3d7fd9');
+  }
+  function layout() {
+    const s = portrait() ? .74 : 1;
+    grp.scale.setScalar(s); grp.position.set(0, 0, portrait() ? -.15 : 0);
+    grp.updateMatrixWorld(true);
+  }
+  // World position of seat s's pawn standing on space i (the Litter Box seats up to 6 in a little grid).
+  function pawnPos(s, i) {
+    const v = local[i].clone().setY(i === 0 ? .28 : .15);
+    if (i === 0) { v.x += ((s % 3) - 1) * .22; v.z += (Math.floor(s / 3) - .5) * .26; }
+    return grp.localToWorld(v);
+  }
+  function setup(snap) {
+    clear();
+    if (snap.mode !== 'board') return;
+    build(); layout(); grp.visible = true; deckG.visible = true;
+    snap.seats.forEach((st, s) => {
+      const g = new THREE.Group(), sc = .19 * grp.scale.x;
+      const ring = new THREE.Mesh(new THREE.RingGeometry(.15, .22, 28), new THREE.MeshBasicMaterial({color: st.color, side: THREE.DoubleSide}));
+      ring.rotation.x = -Math.PI / 2; ring.position.y = .005; g.add(ring);
+      const av = buildAvatar(st.look); av.scale.setScalar(sc / grp.scale.x); av.position.y = 1.18 * sc / grp.scale.x; g.add(av);
+      g.scale.setScalar(grp.scale.x); scene.add(g);
+      const tag = document.createElement('div'); tag.className = 'ptag'; tag.style.background = st.color; tag.textContent = s === view.mySeat ? 'YOU' : st.nick; $('#labels').appendChild(tag);
+      pawns[s] = {g, tag, i: 0};
+      g.position.copy(pawnPos(s, 0));
+    });
+    setMode(false); last = {gift: last.gift};
+  }
+  function clear() {
+    pawns.forEach(p => { if (p) { scene.remove(p.g); p.tag.remove(); } });
+    pawns = []; grp.visible = false; deckG.visible = false; grp.rotation.z = 0; flipping = false;
+    while (deckG.children.length) deckG.remove(deckG.children[0]);
+    last = {gift: last.gift};
+  }
+  function stack(n, pos, topMat) {
+    const k = Math.min(n, 14);
+    for (let j = 0; j < k; j++) {
+      const top = j === k - 1;
+      const m = new THREE.Mesh(DISC_GEO, [sideMat, top ? topMat : backMatD, backMatD]);
+      m.position.set(pos.x, .03 + j * .038, pos.z); m.rotation.y = Math.PI / 2; deckG.add(m);
+    }
+  }
+  function stacks(B) {
+    const key = [B.mdN, B.mdisN, B.mtop, (B.up[0] || {}).i, (B.up[0] || {}).t, portrait()].join('|');
+    if (last.stacks === key) return; last.stacks = key;
+    while (deckG.children.length) deckG.remove(deckG.children[0]);
+    const up0 = B.up[0] && B.up[0].i === 0 ? B.up[0].t : null;
+    stack(B.mdN, mdPos(), up0 ? discMat(up0) : backMatD);
+    if (B.mdisN) stack(B.mdisN, mdisPos(), discMat(B.mtop));
+  }
+  function sync(B) {
+    if (!B || !built || !grp.visible) return;
+    layout();
+    if (!flipping && B.chaos !== chaos) setMode(B.chaos);
+    pawns.forEach((p, s) => { if (p && !p.moving) { p.i = B.pos[s]; p.g.position.copy(pawnPos(s, B.pos[s])); p.g.scale.setScalar(grp.scale.x); } });
+    stacks(B);
+  }
+  const deckTopPos = () => mdPos().setY(.05 + Math.min(14, (view.mirror && view.mirror.board ? view.mirror.board.mdN : 1)) * .038);
+  const disTopPos = () => mdisPos().setY(.06 + Math.min(14, (view.mirror && view.mirror.board ? view.mirror.board.mdisN : 0)) * .038);
+  async function animDisc(e) {
+    const m = new THREE.Mesh(DISC_FLY, [sideMat, discMat(e.disc), backMatD]);
+    m.position.copy(e.from === 'ditto' ? disTopPos() : e.from === 'bottom' ? mdPos().setY(.05) : deckTopPos());
+    m.quaternion.copy(e.from === 'ditto' ? qUp : qDown); scene.add(m);
+    Sfx.flip(); Sfx.whoosh();
+    const pos = new V3(0, 1.55, 1.1);
+    await flyTo(m, pos, faceCamQuat(pos), .55, .8, 1.9);
+    const what = DISCS[e.disc].label;
+    banner(e.from === 'ditto' ? `${nm(e.p)} reused ${what}` : e.ignore ? `${what} · thrown away` : `${nm(e.p)} drew ${what}`, e.disc === 'mag' ? '#ffd23f' : '#ffffff');
+    if (e.disc === 'mag' && !e.ignore) { shake = .3; Sfx.alert(); }
+    await sleep(e.ignore ? 350 : 750);
+    await flyTo(m, disTopPos(), qUp, .4, .6, 1); scene.remove(m);
+  }
+  async function animMove(e) {
+    const P = pawns[e.p]; if (!P) return;
+    P.moving = true;
+    for (const i of e.path) { Sfx.click(); await flyTo(P.g, pawnPos(e.p, i), P.g.quaternion.clone(), .25, .35, P.g.scale.x); P.i = i; }
+    P.moving = false;
+  }
+  async function animSwap(e) {
+    const A = pawns[e.p], W = e.w == null ? null : pawns[e.w];
+    if (!A || !W) return;
+    A.moving = W.moving = true;
+    await Promise.all([flyTo(A.g, pawnPos(e.p, e.to), A.g.quaternion.clone(), .8, 1.4, A.g.scale.x), flyTo(W.g, pawnPos(e.w, e.from), W.g.quaternion.clone(), .8, 1.4, W.g.scale.x)]);
+    A.moving = W.moving = false;
+  }
+  async function animFlip(ch) {
+    flipping = true; Sfx.shuffle();
+    await tween(.35, k => { grp.rotation.z = k * Math.PI / 2; });
+    setMode(ch);
+    await tween(.35, k => { grp.rotation.z = -(1 - k) * Math.PI / 2; });
+    grp.rotation.z = 0; flipping = false;
+  }
+  async function animMagnet(e) {
+    const m = new THREE.Mesh(DISC_FLY, [sideMat, discMat('mag'), backMatD]);
+    m.position.copy(anchorOf(e.p)); m.quaternion.copy(qDown); scene.add(m);
+    await flyTo(m, deckTopPos(), qDown, .7, 1.2, 1); scene.remove(m);
+    Sfx.shuffle(); await tween(.5, k => { deckG.rotation.y = Math.sin(k * Math.PI * 4) * .06 * (1 - k); });
+  }
+  async function wobble() { Sfx.shuffle(); await tween(.6, k => { deckG.position.y = Math.abs(Math.sin(k * Math.PI * 4)) * .12 * (1 - k); }); deckG.position.y = 0; }
+  // Labels: little name tags on the pawns, and the Move Deck caption.
+  function labels() {
+    const B = view.mirror && view.mirror.board;
+    if (!grp.visible || !B) { $('#mdeckLbl').hidden = true; return; }
+    pawns.forEach((p, s) => {
+      if (!p) return;
+      const atStart = p.i === 0 && !p.moving;
+      p.tag.hidden = atStart && s !== view.mySeat;
+      if (!p.tag.hidden) place(p.tag, p.g.position.clone().setY(p.g.position.y + .62 * grp.scale.x), '-50%', '-100%');
+    });
+    const l = $('#mdeckLbl'); l.hidden = false;
+    const mine = !!turnPrompt(), up = B.up.slice(0, 4).map(u => `${u.i === 0 ? 'next' : '#' + (u.i + 1)}: ${DISCS[u.t].label}`);
+    const txt = `Move deck · ${B.mdN}${mine ? ' · tap to draw' : ''}${up.length ? '\n' + up.join(' · ') : ''}`;
+    if (l._t !== txt) { l._t = txt; l.textContent = txt; }
+    place(l, mdPos().setZ(mdPos().z + .45).setX(0), '-50%', '0%');
+  }
+  function hitDeck(ray) { return deckG.visible && ray.intersectObjects(deckG.children)[0]; }
+  function tick(t) { if (last.gift && grp.visible) last.gift.rotation.y = t * .8; }
+  return {setup, clear, sync, animDisc, animMove, animSwap, animFlip, animMagnet, wobble, labels, hitDeck, tick, get visible() { return grp.visible; }};
+})();
+// Disc pictures for prompts (Move-or-flip choice, Alter the Future).
+function makeDiscURLs() { for (const t of Object.keys(DISCS)) faceURL['disc_' + t] = discCanvas(t).toDataURL('image/png'); }
 
 /* ======================= Roulette arrow, tombstones, fireworks, confetti ======================= */
 const rouletteArrow = (() => {
@@ -3556,6 +4183,7 @@ function clearTable() {
   view.seatObjs = []; view.hand = []; view.handoff.clear(); view.target = null; view.stickers = {}; $('#mySticker').innerHTML = ''; $('#targetAlert').hidden = true; discardMeshes = []; discardTypes = []; updateDiscardLbl(); closeDiscard(); view.boomMesh = null;
   dismissHolo(); danger = false; padTarget.set('#62f0ff'); $('#tag').innerHTML = ''; $('#labels').innerHTML = '';
   setDeckHeight(46);
+  BoardView.clear();
 }
 function seatAngles(n) {
   if (n <= 5) return ({1: [90], 2: [145, 35], 3: [165, 90, 15], 4: [170, 120, 60, 10], 5: [175, 132, 90, 48, 5]})[n] || [];
@@ -3602,10 +4230,11 @@ function setupGame(snap) {
     view.seatObjs[s] = {group: g, ring, avatar: av, fan, dir: new V3(0, 0, 1), pos, lbl, bub, ly: 2.45, scale: 1};
   });
   resize();
+  BoardView.setup(snap);
   const first = snap.events[0];
   if (first && first.k === 'deal' && first.seq === 1) {
     view.lastSeq = 0;
-    view.mirror = {hands: snap.seats.map(() => []), alive: snap.seats.map(() => true), deckN: first.after.deckN + snap.seats.length * 8 - (snap.extra || []).length, kit: 0, cur: 0, tl: 1, top: null, fx: first.after.fx};
+    view.mirror = {hands: snap.seats.map(() => []), alive: snap.seats.map(() => true), deckN: first.after.deckN + snap.seats.length * (snap.mode === 'board' ? 5 : 8) - (snap.extra || []).length, kit: 0, cur: 0, tl: 1, top: null, fx: first.after.fx, board: first.after.board};
   } else {
     const last = snap.events[snap.events.length - 1];
     view.lastSeq = snap.seq; view.mirror = last ? last.after : null;
@@ -3664,7 +4293,11 @@ function applyMirror(snapCards) {
   const M = view.mirror; if (!M) return;
   M.hands.forEach((h, s) => { if (s !== view.mySeat && view.fanN[s] !== h.length) { view.fanN[s] = h.length; updateFan(s); } });
   setDeckHeight(M.deckN);
-  $('#deckCount').textContent = M.deckN; $('#kitCount').textContent = M.kit;
+  $('#deckCount').textContent = M.deckN; $('#kitCount').textContent = M.board ? M.board.mdN : M.kit;
+  $('#kitLbl').textContent = M.board ? 'Discs' : 'Bombs';
+  $('#modeChip').hidden = !M.board;
+  if (M.board) { $('#modeChip').classList.toggle('chaos', M.board.chaos); $('#modeChipT').textContent = M.board.chaos ? 'Chaos mode' : 'Calm mode'; }
+  BoardView.sync(M.board);
   updateFxChips(M);
   const cur = M.cur;
   $('#turnChip').textContent = view.snap && view.snap.status === 'over' ? 'Game over' : cur === view.mySeat ? 'Your turn' : `${nm(cur)}'s turn`;
@@ -3718,7 +4351,8 @@ function reconcileHand() {
   }
   if (blind && !view.handBlind) shuffleArr(view.hand);
   view.handBlind = blind;
-  if (!blind) view.hand.sort((a, b) => ORDER.indexOf(a.type) - ORDER.indexOf(b.type));
+  const bd = !!(view.snap && view.snap.mode === 'board');
+  if (!blind) view.hand.sort((a, b) => handRank(a.type, bd) - handRank(b.type, bd));
 }
 function takeMine(id) {
   const h = view.hand.find(x => x.id === id); if (!h) return null;
@@ -3794,11 +4428,23 @@ function fmtNote(e) {
     return e[k] != null ? e[k] : '';
   });
 }
-const tname = t => (TYPES[t === 'implodeUp' ? 'implode' : t] || {name: t}).name;
+const tname = t => String(t).startsWith('disc_') ? DISCS[t.slice(5)].label : (TYPES[t === 'implodeUp' ? 'implode' : t] || {name: t}).name;
 function logEvent(e) {
   const T = tname;
   switch (e.k) {
-    case 'deal': log('Cards dealt: 7 plus a Defuse each.'); break;
+    case 'deal': log(view.snap && view.snap.mode === 'board' ? 'Action Cards dealt: 5 each. Everyone starts in the Litter Box.' : 'Cards dealt: 7 plus a Defuse each.'); break;
+    case 'bcards': log(`${nm(e.p)} drew ${e.cards.length} Action Card${e.cards.length === 1 ? '' : 's'}${e.why === 'space' ? ' from the space' : e.why === 'empty' ? ' (empty hand)' : ''}.`); break;
+    case 'disc': log(e.from === 'ditto' ? `${nm(e.p)} reused ${DISCS[e.disc].label}.` : `${nm(e.p)} drew ${DISCS[e.disc].label}${e.ignore ? ' (thrown away)' : ''}.`); break;
+    case 'bmove': { const to = e.path[e.path.length - 1]; log(`${nm(e.p)} moved to ${to === B_RIB ? 'the Ribbon' : 'space ' + to}.`); break; }
+    case 'bflip': log(`${nm(e.p)} flipped the board to ${e.chaos ? 'Chaos' : 'Calm'} Mode.`); break;
+    case 'bdanger': log(`${nm(e.p)} landed on an Exploding Kitten space!`); break;
+    case 'bexplode': log(e.w == null ? `${nm(e.p)} exploded, but ${e.p === view.mySeat ? 'were' : 'was'} already last.` : `${nm(e.p)} exploded and swapped places with ${nmObj(e.w)}.`); break;
+    case 'bdiscard': log(`${nm(e.p)} discarded ${e.lost.length} card${e.lost.length === 1 ? '' : 's'}.`); break;
+    case 'expose': log(`${nm(e.p)} exposed ${e.n} Move Disc${e.n === 1 ? '' : 's'}.`); break;
+    case 'magnet': log(`${nm(e.p)} secretly added a Danger Magnet to the Move Deck.`); break;
+    case 'mshuffle': log(e.refill ? 'The Move Discard Pile was shuffled into a new Move Deck.' : `${nm(e.p)} shuffled every Move Disc together.`); break;
+    case 'mswap': log(`${nm(e.p)} swapped the top and bottom Move Discs.`); break;
+    case 'malter': log(`${nm(e.p)} rearranged the top 2 Move Discs.`); break;
     case 'kittens': log(`${e.n} danger card${e.n === 1 ? '' : 's'} and ${e.spare} spare Defuse${e.spare === 1 ? '' : 's'} shuffled in.`); break;
     case 'note': log(fmtNote(e)); break;
     case 'reverse': log(`${nm(e.p)} reversed the turn order.`); break;
@@ -3852,7 +4498,7 @@ async function animEvent(e) {
   Announcer.onEvent(e);
   switch (e.k) {
     case 'deal': {
-      banner('Dealing 7 cards + 1 Defuse each');
+      banner(view.snap.mode === 'board' ? 'Dealing 5 Action Cards each' : 'Dealing 7 cards + 1 Defuse each');
       const N = e.after.hands.length, jobs = [];
       for (let r = 0; r < 8; r++) for (let s = 0; s < N; s++) {
         const c = e.after.hands[s][r]; if (!c) continue;
@@ -3980,6 +4626,30 @@ async function animEvent(e) {
     }
     case 'doom': flash(); shake = .6; Sfx.boom(); showFx('CAT-ASTROPHE', '#ff3a2a'); banner('Cat-astrophe! The Shadow Cat cannot be defused anymore.', '#ff3a2a'); await sleep(800); break;
     case 'roulette': await playRoulette(e.p); break;
+    case 'bcards':
+      for (const c of e.cards) {
+        Sfx.flip();
+        const m = makeCard(e.p === view.mySeat ? c.t : null); m.position.copy(deckTop()); m.quaternion.copy(qDown); scene.add(m);
+        if (e.p === view.mySeat) { const pos = camera.localToWorld(new V3(0, 0, -4)); await flyTo(m, pos, faceCamQuat(pos), .4, 1); view.handoff.set(c.i, m); }
+        else { await flyTo(m, anchorOf(e.p), qDown, .4, 1, .6); scene.remove(m); view.fanN[e.p]++; updateFan(e.p); }
+      }
+      break;
+    case 'disc': await BoardView.animDisc(e); break;
+    case 'bmove': await BoardView.animMove(e); break;
+    case 'bflip': banner(`${e.chaos ? 'CHAOS' : 'CALM'} MODE! The board flips`, e.chaos ? '#ff4d4d' : '#62b8ff'); await BoardView.animFlip(e.chaos); break;
+    case 'bdanger': summon('boom', nm(e.p), 'DANGER!'); shake = .3; banner(`${nm(e.p)} landed on an Exploding Kitten!`, TYPES.boom.color); await sleep(500); break;
+    case 'bexplode':
+      burst(); flash(); shake = .9; padLight.intensity = 14; Sfx.boom(); showFx('KABOOM', '#ff7a1a'); dismissHolo(); danger = false;
+      banner(e.w == null ? `${nm(e.p)} exploded!` : `${nm(e.p)} exploded and swaps with ${nmObj(e.w)}!`, '#ff4d6d');
+      await sleep(500); await BoardView.animSwap(e); break;
+    case 'bdiscard': for (const c of e.lost) { toDiscard(cardFrom(e.p, c, true)); await sleep(90); } await sleep(400); break;
+    case 'expose': {
+      Sfx.flip(); const up = (e.after.board.up || []).slice(0, 4).map(u => `${u.i === 0 ? 'Next' : '#' + (u.i + 1)}: ${DISCS[u.t].label}`);
+      banner(up.length ? up.join(' · ') : 'No discs to expose', '#c08bff'); await BoardView.wobble(); break;
+    }
+    case 'magnet': banner(`${nm(e.p)} slipped a Danger Magnet into the Move Deck!`, '#ffd23f'); await BoardView.animMagnet(e); break;
+    case 'mshuffle': case 'mswap': case 'malter':
+      if (e.k === 'mswap') banner('Top and bottom Move Discs swapped'); if (e.k === 'mshuffle' && !e.refill) banner('Every Move Disc shuffled'); await BoardView.wobble(); break;
     case 'win': {
       const w = e.p, mine = w === view.mySeat;
       summon('defuse', null, mine ? 'VICTORY' : `${nm(w).toUpperCase()} WINS`);
@@ -3989,7 +4659,8 @@ async function animEvent(e) {
       const host = G && G.host === me.id;
       const opts = view.code === 'solo' ? [{label: 'Play again', value: 'again'}, {label: 'Main menu', value: 'home', cls: 'alt'}]
         : host ? [{label: 'Back to lobby', value: 'lobby'}] : [{label: 'Back to lobby', value: 'lobby'}];
-      ask({title: mine ? 'You survived!' : `${nm(w)} wins`, text: mine ? 'Every other player exploded. The kittens salute you.' : 'Better luck next round. Watch out for Attacks when the deck gets thin.', options: opts})
+      const bd = view.snap.mode === 'board';
+      ask({title: mine ? (bd ? 'You reached the Ribbon!' : 'You survived!') : `${nm(w)} wins`, text: bd ? (mine ? 'First cat to the Ribbon. The kittens salute you.' : 'They landed on the Ribbon first. Better luck next race!') : mine ? 'Every other player exploded. The kittens salute you.' : 'Better luck next round. Watch out for Attacks when the deck gets thin.', options: opts})
         .then(v => { if (v === 'again') startSolo(); else if (v === 'home') exitToHome(); else { showScreen('lobby'); renderLobby(); } });
       break;
     }
@@ -4018,7 +4689,7 @@ function updatePromptUI() {
           sendIntent({k: 'defuse', p: pr.id, use, revive});
         });
     }
-    if (pr.kind === 'hide') { const n = pr.n; ask({title: pr.title || 'Hide the kitten', text: `${pr.text || 'Put it back anywhere in the draw pile.'} (${n} cards in the pile)`,
+    if (pr.kind === 'hide') { const n = pr.n; ask({title: pr.title || 'Hide the kitten', text: `${pr.text || 'Put it back anywhere in the draw pile.'} (${n} ${pr.unit || 'cards'} in the pile)`,
         options: [{label: 'Top', value: 0}, {label: '2nd', value: Math.min(1, n)}, {label: '3rd', value: Math.min(2, n)}, {label: 'Middle', value: Math.floor(n / 2)}, {label: 'Bottom', value: n}, {label: 'Random', value: -1, cls: 'alt'}]})
       .then(idx => sendIntent({k: 'hide', p: pr.id, idx})); }
     if (pr.kind === 'choice') ask({title: pr.title, text: pr.text, options: [...(pr.card ? [{img: faceURL[pr.card], label: tname(pr.card), caption: tname(pr.card), value: null, static: true, card: pr.card}] : []), ...pr.opts]})
@@ -4031,13 +4702,13 @@ function updatePromptUI() {
     view.reactId = nw.id; Sfx.alert();
     const canNope = nw.eligible.includes(view.mySeat), what = nw.n > 1 ? 'combo' : tname(nw.cardType);
     const atMe = nw.victim === view.mySeat && !nw.cancelled;
-    $('#reactText').textContent = canNope ? (nw.cancelled ? `${nmPos(nw.actor)} ${what} was Noped. Nope the Nope?` : atMe ? `${nm(nw.actor)} is targeting YOU with ${what}! Nope it?` : `Nope ${nmPos(nw.actor)} ${what}?`) : `${nm(nw.actor)} played ${what}. Play a card now?`;
+    $('#reactText').textContent = nw.pre ? `${nm(nw.actor)} ${nw.actor === view.mySeat ? 'are' : 'is'} about to draw a Move Disc. Play a NOW card?` : canNope ? (nw.cancelled ? `${nmPos(nw.actor)} ${what} was Noped. Nope the Nope?` : atMe ? `${nm(nw.actor)} is targeting YOU with ${what}! Nope it?` : `Nope ${nmPos(nw.actor)} ${what}?`) : `${nm(nw.actor)} played ${what}. Play a card now?`;
     $('#react').classList.toggle('me-target', atMe);
     $('#nopeBtn').hidden = !canNope;
     $('#nowBtns').innerHTML = myNow.map(c => `<button class="btn sm" data-now="${c.i}" data-t="${c.t}">${esc(tname(c.t))}</button>`).join('');
     const bar = $('#reactBar'); bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)'; $('#react').hidden = false;
     void bar.offsetWidth; bar.style.transition = `transform ${nw.ms - 300}ms linear`; bar.style.transform = 'scaleX(0)';
-    view.hand.forEach(h => h.callout = canNope && h.type === 'nope');
+    view.hand.forEach(h => h.callout = canNope && (h.type === 'nope' || h.type === 'b_nope'));
     clearTimeout(view.reactTimer); view.reactTimer = setTimeout(hideReact, nw.ms - 200);
   }
   if (!nw && !$('#react').hidden) hideReact();
@@ -4048,7 +4719,7 @@ function hideReact() { $('#react').hidden = true; $('#react').classList.remove('
 function markTarget(seat, actor, what) {
   view.target = {seat, until: Date.now() + 6500};
   if (seat !== view.mySeat) return;
-  const hasNope = view.hand.some(h => h.type === 'nope') && !view.handBlind;
+  const hasNope = view.hand.some(h => h.type === 'nope' || h.type === 'b_nope') && !view.handBlind;
   $('#targetText').innerHTML = `<b>${esc(nm(actor))}</b> is targeting <b>you</b> with ${esc(what)}!` + (hasNope ? '<small>Tap Nope to stop it.</small>' : '');
   const el = $('#targetAlert'); el.hidden = false; el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
   Sfx.alert();
@@ -4102,7 +4773,22 @@ function sendIntent(it) {
   const body = {items: intentItems}, path = `games/${view.code}/intents/${me.id}`;
   intentChain = intentChain.then(() => db.doc(path).set(body)).catch(() => { setHint('Your move did not reach the host. Try again.'); view.sentFor = 0; updateBar(); });
 }
+function validateBoard(sel) {
+  if (!sel.length) return {ok: false, msg: 'Play Action Cards if you like, then draw a Move Disc to move (tap the Move Deck).'};
+  const t = sel[0].type, T = TYPES[t], B = view.mirror.board || {};
+  if (sel.length === 1) {
+    if (CATS.includes(t)) return {ok: false, msg: 'Cat cards work in matching pairs: steal a random card from any player.'};
+    if (t === 'b_defuse') return {ok: false, msg: 'Defuse is played when you land on an Exploding Kitten space.'};
+    if (t === 'b_nope') return {ok: false, msg: 'Nope NOW is played when someone else plays an Action Card.'};
+    if (t === 'b_ditto' && !B.mdisN) return {ok: false, msg: 'Ditto needs a disc on the Move Discard Pile first.'};
+    if (t === 'b_magnet' && !B.mags) return {ok: false, msg: 'There are no Danger Magnets left to add.'};
+    return {ok: true, label: `Play ${T.name}`, msg: T.text};
+  }
+  if (sel.length === 2 && CATS.includes(t) && sel[1].type === t) return {ok: true, label: 'Play pair', msg: 'Steal a random card from any player.'};
+  return {ok: false, msg: 'Only a matching pair of cat cards can be played together.'};
+}
 function validate(sel) {
+  if (view.snap && view.snap.mode === 'board') return validateBoard(sel);
   if (!sel.length) return {ok: false, msg: 'Tap cards to select them, then Play. Drawing ends your turn.'};
   const M = view.mirror, fx = fxOf(M);
   if (fx.blind && fx.blind[view.mySeat]) return sel.length === 1 ? {ok: true, label: 'Play blind', msg: 'You are blindfolded! Whatever this card is, it gets played.'} : {ok: false, msg: 'Blindfolded: play one card at a time.'};
@@ -4133,6 +4819,7 @@ function updateBar() {
   const v = validate(view.hand.filter(c => c.selected));
   $('#playBtn').disabled = !mine || !v.ok; $('#playBtn').textContent = mine && v.ok ? v.label : 'Play';
   $('#drawBtn').disabled = !mine;
+  { const bd = !!(view.snap && view.snap.mode === 'board'), want = bd ? 'Draw<span class="t"> Move Disc</span>' : 'Draw<span class="t"> &amp; end turn</span>'; if ($('#drawBtn')._m !== bd) { $('#drawBtn')._m = bd; $('#drawBtn').innerHTML = want; } }
   const outNow = !!(view.mirror && view.mySeat >= 0 && !view.mirror.alive[view.mySeat]);
   $('#playBtn').hidden = outNow; $('#drawBtn').hidden = outNow;
   $('#bar').classList.toggle('mine', mine);
@@ -4147,7 +4834,7 @@ function updateBar() {
   else h = M ? `Waiting for ${nm(M.cur)}… Tap a card to read it.` : '';
   $('#hint').textContent = h;
   const imp = fxOf(M).imp;
-  $('#deckLbl').textContent = (mine ? 'Tap to draw' : 'Draw pile') + (imp >= 0 ? ` · Collapsing Kitten #${imp + 1} from top` : '');
+  $('#deckLbl').textContent = sn && sn.mode === 'board' ? 'Action deck' : (mine ? 'Tap to draw' : 'Draw pile') + (imp >= 0 ? ` · Collapsing Kitten #${imp + 1} from top` : '');
 }
 $('#playBtn').addEventListener('click', async () => {
   const pr = turnPrompt(); if (!pr) return;
@@ -4193,6 +4880,7 @@ function pick(e) {
   ray.setFromCamera(ptr, camera);
   const h = ray.intersectObjects(view.hand.map(c => c.mesh.userData.front))[0];
   if (h) return {card: h.object.userData.group.userData.cardRef};
+  if (BoardView.hitDeck(ray)) return {mdeck: true};
   if (deck.visible && ray.intersectObject(deck)[0]) return {deck: true};
   if (discardMeshes.length && ray.intersectObjects(discardMeshes, true)[0]) return {discard: true};
   if (discardTypes.length && ray.ray.intersectPlane(tablePlane, tableHit) && Math.hypot(tableHit.x - DISCARD_POS.x, tableHit.z - DISCARD_POS.z) < .8) return {discard: true};
@@ -4221,10 +4909,11 @@ renderer.domElement.addEventListener('click', e => {
   if (view.screen !== 'game') return;
   if (held) { held = false; return; }
   const h = pick(e); if (!h) return;
-  if (h.deck) return doDraw();
+  if (h.mdeck) return doDraw();
+  if (h.deck) { if (view.snap && view.snap.mode === 'board') return setHint('That is the Action Deck. Tap the Move Deck (the discs) to draw a Move Disc.'); return doDraw(); }
   if (h.discard) { Sfx.flip(); return openDiscard(); }
   const c = h.card;
-  if (!$('#react').hidden && c.type === 'nope') return fireNope();
+  if (!$('#react').hidden && (c.type === 'nope' || c.type === 'b_nope')) return fireNope();
   if (!turnPrompt()) return holdCard(c);
   c.selected = !c.selected; updateBar(); Sfx.flip();
 });
@@ -4323,11 +5012,12 @@ function renderLabels() {
   });
   place($('#deckLbl'), DECK_POS.clone().setZ(DECK_POS.z + 1.0), '-50%', '0%');
   place($('#discLbl'), DISCARD_POS.clone().setZ(DISCARD_POS.z + 1.0), '-50%', '0%');
+  BoardView.labels();
 }
 function loop() {
   const dt = Math.min(.05, clock.getDelta()), t = clock.elapsedTime; uTime.value = t;
   for (const tw of [...tweens]) { tw.t += dt; const k = Math.min(1, tw.t / tw.dur); tw.fn(k); if (k >= 1) { tweens.splice(tweens.indexOf(tw), 1); tw.res(); } }
-  Sfx.danger(danger);
+  Sfx.danger(danger); BoardView.tick(t);
   for (const f of envAnim) f(t, dt);
   if (danger) padTarget.set(Math.sin(t * 12) > 0 ? '#ff7a1a' : '#ff2d55');
   padColor.lerp(padTarget, 1 - Math.exp(-dt * 5));
@@ -4443,12 +5133,12 @@ function setLook(patch) {
 function stagePickHTML(sel, disabled) {
   return STAGES.map(([id, label]) => `<button class="chipsel" data-stage="${id}" aria-pressed="${sel === id}"${disabled ? ' disabled' : ''}>${label}</button>`).join('');
 }
-const DECK_SEG = [['classic', 'Classic (13 types)'], ['party', 'Party (all 49 types)']];
+const DECK_SEG = [['classic', 'Classic'], ['party', 'Party (49 types)'], ['board', 'Board game']];
 function renderStagePickers() {
   $('#stagePick').innerHTML = STAGES.map(([id, label]) => `<button class="arena-card" type="button" data-stage="${id}" aria-pressed="${me.stage === id}"><img src="stages/${id}.jpg" alt="" loading="lazy"><span>${label}</span></button>`).join('');
   $('#deckPick').innerHTML = DECK_SEG.map(([id, label]) => `<button type="button" data-deck="${id}" aria-pressed="${me.deck === id}"><i></i>${label}</button>`).join('');
 }
-const DECKS = [['classic', 'Classic · 13 card types'], ['party', 'Party · all 49 card types']];
+const DECKS = [['classic', 'Classic · 13 card types'], ['party', 'Party · all 49 card types'], ['board', 'Board game · race to the Ribbon']];
 function deckPickHTML(sel, disabled) {
   return DECKS.map(([id, label]) => `<button class="chipsel" data-deck="${id}" aria-pressed="${sel === id}"${disabled ? ' disabled' : ''}>${label}</button>`).join('');
 }
@@ -4528,6 +5218,25 @@ const GUIDE = {
   shadow: {use: 'A danger card in the deck. When drawn, discard a Defuse or explode, then it goes to the shrine. During a Cat-astrophe it cannot be defused at all.', tip: 'Undead Kitten also works against it.'},
   catastrophe: {use: 'Only playable while the Sun Cat is on the shrine. The Shadow Cat goes back into the deck and becomes impossible to defuse. Ends your turn.', tip: 'A last gamble when you are behind.'},
 };
+Object.assign(GUIDE, {
+  b_defuse: {use: 'When you land on an Exploding Kitten space you are asked whether to play it. Your cat stays on the space, safe.', tip: 'You do not have to use it. Exploding while far ahead swaps you with the last cat, which can hurt a lot!'},
+  b_nope: {use: 'When someone plays an Action Card, a red bar appears. Tap Nope before it runs out. Nope a Nope to make a Yup.', tip: 'You cannot Nope a Defuse, an Exploding Kitten or a Move Disc.'},
+  b_skip3: {use: 'Play it, draw 3 Action Cards, and your turn ends without moving.', tip: 'Great when the next disc is face up and dangerous.'},
+  b_draw5: {use: 'Fill your hand back up to 5 cards. Your turn continues.', tip: 'Useless if you already hold 5 or more.'},
+  b_expose1: {use: 'The next face-down Move Disc is flipped face up. Everyone sees it under the Move Deck.', tip: 'Know what is coming before you draw.'},
+  b_expose3: {use: 'The next 3 face-down Move Discs are flipped face up for everyone.', tip: 'Plan a Fast Pass or Mega Move around what you see.'},
+  b_mega: {use: 'Two discs are drawn, their numbers are added, and you move that far. Flips, magnets and cut-the-line effects are ignored.', tip: 'Magnets count as 0, so this can dodge one.'},
+  b_bottom: {use: 'You draw the bottom disc of the Move Deck instead of the top one, then move. Your turn ends.', tip: 'Perfect when a Danger Magnet is face up on top.'},
+  b_small: {use: 'Move exactly 1 space, no disc drawn. The space you land on still counts.', tip: 'Handy to land exactly on the Ribbon from the space before it.'},
+  b_fast: {use: 'Discs are drawn until one says Move 4 or Move 5. The others are thrown away, and you use that one.', tip: 'A great escape from a Danger Magnet.'},
+  b_slow: {use: 'Draw a disc and move. If it says Move 1, 2 or 3, you take another whole turn.', tip: 'Even if you explode, you still get the extra turn.'},
+  b_ditto: {use: 'Copies the disc on top of the Move Discard Pile, including its effects, and you move. Your turn ends.', tip: 'Watch for a big Move 5 on the discard pile.'},
+  b_flip: {use: 'Flips the board between Calm and Chaos Mode. Every space changes. Play it any time before someone draws a disc.', tip: 'Flip right before a leader moves to set a trap.'},
+  b_magnet: {use: 'Choose where to hide a Danger Magnet in the Move Deck. Whoever draws it jumps to the next Exploding Kitten space.', tip: 'Put it right on top just before a rival draws!'},
+  b_alter: {use: 'You alone see the top 2 discs and choose their order. Any time before a disc is drawn.', tip: 'Push a Danger Magnet onto someone else.'},
+  b_shuffle: {use: 'Every Move Disc from the deck and the discard pile is shuffled together, face down.', tip: 'Wipes out face-up discs and any magnet someone placed on top.'},
+  b_swap: {use: 'The top and bottom Move Discs trade places.', tip: 'A quick way to bury a face-up Danger Magnet.'},
+});
 const CAT_GUIDE = {use: 'No power on its own. Collect matching cat cards and play them as a <b>pair</b> or <b>three of a kind</b>. See the Combos tab.', tip: 'Keep your cat cards together: your hand is sorted so matching cards sit side by side.'};
 let guideTab = 'cards';
 function guideHTML(tab) {
@@ -4538,8 +5247,20 @@ function guideHTML(tab) {
       return `<div class="gcard" data-q="${esc(T.text)}">${img(t)}<div><h3>${esc(T.name)}</h3><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><p>${G.use}</p><p class="tip">Tip: ${G.tip}</p></div></div>`;
     };
     const classic = ['attack', 'skip', 'favor', 'shuffle', 'future', 'nope', 'defuse', 'boom', ...CATS];
-    const party = Object.keys(TYPES).filter(t => !classic.includes(t));
+    const party = Object.keys(TYPES).filter(t => !classic.includes(t) && !BOARD_TYPES.includes(t));
     return `<section class="gsec"><h3 class="guide-sec">Classic deck</h3>${classic.map(entry).join('')}</section><section class="gsec"><h3 class="guide-sec">Party deck adds ${party.length} more</h3>${party.map(entry).join('')}</section>`;
+  }
+  if (tab === 'board') {
+    const entry = t => { const T = TYPES[t], G2 = GUIDE[t] || CAT_GUIDE; return `<div class="gcard" data-q="${esc(T.text)}">${img(t)}<div><h3>${esc(T.name)}</h3><span class="kind" style="color:${T.color}">${esc(T.kind)}</span><p>${G2.use}</p><p class="tip">Tip: ${G2.tip}</p></div></div>`; };
+    const disc = t => `<li><img src="${faceURL['disc_' + t] || ''}" alt=""><span>${esc(DISCS[t].label)}</span></li>`;
+    return `<section class="gsec"><h3 class="guide-sec">How the board game works</h3>
+      <div class="gcard"><div></div><div><h3>Goal</h3><span class="kind" style="color:#ffd23f">Race</span><p>Be the first cat to land <b>exactly</b> on the Ribbon. Overshoot it and you follow the loop-back arrow and keep moving.</p></div></div>
+      <div class="gcard"><div></div><div><h3>Your turn</h3><span class="kind" style="color:#62f0ff">Step by step</span><ol class="steps"><li>Play as many Action Cards as you like, or none.</li><li>Draw a Move Disc (tap the Move Deck) and move your cat. Your turn is over.</li><li>Start a turn with no cards? You draw 3 first.</li></ol></div></div>
+      <div class="gcard"><div></div><div><h3>Spaces</h3><span class="kind" style="color:#ff7a1a">Where you land</span><p><b>Number:</b> draw that many Action Cards. <b>Another cat:</b> hop to the next free space ahead. <b>Exploding Kitten:</b> play a Defuse, or explode: swap places with the cat in last place and discard down to 3 cards.</p></div></div>
+      <div class="gcard"><div></div><div><h3>Flipping the board</h3><span class="kind" style="color:#ff6b6b">Calm / Chaos</span><p>Some discs and cards flip the board between blue Calm Mode and red Chaos Mode. Every space changes, but nothing triggers until someone moves.</p></div></div>
+      <div class="gcard"><div></div><div><h3>NOW cards</h3><span class="kind" style="color:#ff5fa8">Any time</span><p>Cards with NOW in the name can be played on anyone's turn, before they draw a Move Disc. A Danger Magnet on top of the deck is a nasty surprise!</p></div></div>
+      </section><section class="gsec"><h3 class="guide-sec">Move Discs</h3><ol class="disc-list">${[...START_DISCS, 'mag'].map(disc).join('')}</ol></section>
+      <section class="gsec"><h3 class="guide-sec">Action Cards</h3>${BOARD_TYPES.filter((t, i, a) => a.indexOf(t) === i).map(entry).join('')}</section>`;
   }
   if (tab === 'combos') {
     const pic = (t, n) => `<div class="combo-imgs">${Array(n).fill(img(t)).join('')}</div>`;
@@ -4606,12 +5327,13 @@ $('#discLbl').addEventListener('click', openDiscard);
   backTex.image = backArt ? drawBackArt(backArt) : drawBack(); backTex.needsUpdate = true;
   { const sm = document.createElement('canvas'); sm.width = 184; sm.height = 258; sm.getContext('2d').drawImage(backTex.image, 0, 0, 184, 258); backURL = sm.toDataURL('image/png'); }
   await Promise.all(Object.keys(TYPES).map(async t => {
-    const art = await loadArt(t);
+    const art = await loadArt(TYPES[t].art || t);
     const c = drawFace(t, art || await loadImg(catSVG(TYPES[t].color, TYPES[t].acc)), !!art);
     faceMat[t] = new THREE.MeshBasicMaterial({map: canvasTex(c), alphaTest: .5});
     const sm = document.createElement('canvas'); sm.width = 184; sm.height = 258; sm.getContext('2d').drawImage(c, 0, 0, 184, 258);
     faceURL[t] = sm.toDataURL('image/png');
   }));
+  makeDiscURLs();
   summon('boom', null, '');
 })();
 </script>
