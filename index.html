@@ -346,6 +346,60 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 .guide-search svg{width:16px;height:16px;flex:none}
 .guide-search input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:inherit;font-size:14px;padding:8px 0;outline:none}
 .guide-search input::placeholder{color:var(--muted)}
+#tut{position:fixed;inset:0;display:grid;place-items:center;background:rgba(6,5,14,.82);z-index:35;padding:16px;box-sizing:border-box;backdrop-filter:blur(3px)}
+.tut-box{width:min(820px,100%);background:#141030;border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden;display:flex;flex-direction:column}
+.tut-top{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.tut-top b{font-family:var(--f-display);font-weight:400;font-size:1.05rem;letter-spacing:.04em}
+.tut-mode{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--holo);border:1px solid color-mix(in srgb,var(--holo) 50%,transparent);border-radius:999px;padding:2px 9px}
+.tut-note{margin-left:auto;font-size:12px;color:var(--muted)}
+#tutSkip{margin-left:auto}
+.tut-stage{padding:18px 22px 6px;text-align:center;min-height:330px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+.tut-stage h3{font-family:var(--f-display);font-weight:400;font-size:clamp(1.3rem,3.6vw,1.9rem);margin:14px 0 6px;color:#ffd23f;animation:tFade .5s ease both}
+.tut-stage p{margin:0;max-width:600px;color:#dcd9f6;font-size:clamp(14px,2.2vw,17px);line-height:1.5;animation:tFade .5s .15s ease both}
+.t-art{height:210px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:nowrap}
+.t-card{width:clamp(62px,13vw,112px);border-radius:10px;box-shadow:0 10px 24px rgba(0,0,0,.5)}
+.t-card.big{width:clamp(110px,20vw,150px)}
+.t-disc{width:clamp(50px,10vw,86px);border-radius:50%;box-shadow:0 8px 18px rgba(0,0,0,.5)}
+.t-space{width:clamp(44px,8vw,70px)}
+.t-emo{width:clamp(90px,18vw,140px)}
+.t-arrow{font-size:34px;color:var(--holo);animation:tPulse 1s ease-in-out infinite alternate}
+.t-gap{width:24px;flex:none}
+.t-stack{position:relative;display:grid}.t-stack>*{grid-area:1/1}
+.t-board{position:relative;width:min(420px,80vw);border-radius:14px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.t-board>img:first-child{display:block;width:100%}
+.t-board .t-emo{position:absolute;width:22%;bottom:4%;left:2%;animation:tWalk 4.5s .3s ease-in-out both}
+.t-ribbon{position:absolute;right:4%;bottom:10%;font-family:var(--f-display);color:#fff;background:#b05be0;border-radius:50%;width:15%;aspect-ratio:1;display:grid;place-items:center;font-size:clamp(11px,2vw,16px);box-shadow:0 0 18px #b05be0}
+.t-flipboard{position:relative;width:min(420px,80vw);aspect-ratio:1.92;perspective:900px}
+.t-flipboard img{position:absolute;inset:0;width:100%;height:100%;border-radius:14px;backface-visibility:hidden;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.t-flipboard img:first-child{animation:tFlipA 4s .8s ease-in-out both}
+.t-flipboard img:last-child{animation:tFlipB 4s .8s ease-in-out both}
+.t-in{animation:tIn .55s cubic-bezier(.3,1.5,.5,1) both}
+.t-pop{animation:tPop .5s cubic-bezier(.3,1.6,.5,1) both}
+.t-flipin{animation:tFlipIn .7s ease both}
+.t-shake{animation:tPop .4s ease both,tShake .5s .5s ease-in-out 4}
+.t-stamp{animation:tStamp .5s cubic-bezier(.3,1.4,.5,1) both}
+.t-bounce{animation:tPop .5s ease both,tBob 1.2s .5s ease-in-out infinite alternate}
+.t-late{animation-delay:.5s,1s}
+.tut-dots{display:flex;justify-content:center;gap:6px;padding:10px 0 12px}
+.tut-dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.tut-dots i.done{background:color-mix(in srgb,var(--holo) 50%,transparent)}
+.tut-dots i.on{background:var(--holo);box-shadow:0 0 8px var(--holo)}
+.tut-bar{height:4px;background:#0e0b22}
+.tut-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--holo),#ffd23f);transform-origin:left;transform:scaleX(0)}
+.tut-watch{margin-right:8px}
+@keyframes tFade{from{opacity:0;transform:translateY(8px)}}
+@keyframes tIn{from{opacity:0;transform:translateY(40px) rotate(-8deg) scale(.7)}}
+@keyframes tPop{from{opacity:0;transform:scale(.2)}}
+@keyframes tFlipIn{0%{opacity:0;transform:rotateY(90deg) scale(.6)}100%{opacity:1;transform:none}}
+@keyframes tShake{25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
+@keyframes tStamp{0%{opacity:0;transform:scale(2.4) rotate(-14deg)}100%{opacity:1;transform:rotate(-6deg)}}
+@keyframes tBob{to{transform:translateY(-12px)}}
+@keyframes tPulse{to{transform:translateX(6px);opacity:.6}}
+@keyframes tWalk{0%{left:2%}35%{left:30%;bottom:30%}65%{left:52%;bottom:46%}100%{left:66%;bottom:12%}}
+@keyframes tFlipA{0%,30%{transform:rotateY(0)}70%,100%{transform:rotateY(180deg)}}
+@keyframes tFlipB{0%,30%{transform:rotateY(-180deg)}70%,100%{transform:rotateY(0)}}
+@media (max-width:560px){.tut-stage{min-height:300px;padding:14px 12px 4px}.t-art{height:170px;gap:5px}.tut-note{display:none}.t-gap{width:8px}}
+@media (prefers-reduced-motion:reduce){.tut-stage *{animation:none!important}}
 .guide-empty{margin:24px 0;text-align:center;color:var(--muted)}
 #cardView{position:fixed;inset:0;display:grid;place-items:center;background:rgba(6,5,14,.72);z-index:40;padding:16px;box-sizing:border-box}
 [data-card]{cursor:zoom-in}
@@ -582,7 +636,7 @@ img[data-card]:focus-visible,.disc-item:focus-visible{outline:2px solid var(--ho
 </div>
 <div id="guide" hidden>
   <div class="guide-sheet" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
-    <div class="guide-head"><h2 id="guideTitle">Card guide</h2><button class="guide-close" id="guideClose" aria-label="Close the card guide">×</button></div>
+    <div class="guide-head"><h2 id="guideTitle">Card guide</h2><button class="btn sm alt tut-watch" id="tutWatch" type="button">&#9654; How-to-play video</button><button class="guide-close" id="guideClose" aria-label="Close the card guide">×</button></div>
     <div class="guide-tabs" role="tablist">
       <button class="chipsel" role="tab" data-gtab="cards" aria-pressed="true">Cards</button>
       <button class="chipsel" role="tab" data-gtab="combos" aria-pressed="false">Combos</button>
@@ -594,6 +648,14 @@ img[data-card]:focus-visible,.disc-item:focus-visible{outline:2px solid var(--ho
   </div>
 </div>
 <div id="flash"></div>
+<div id="tut" hidden role="dialog" aria-modal="true" aria-labelledby="tutTitle">
+  <div class="tut-box">
+    <div class="tut-top"><b id="tutTitle">How to play</b><span class="tut-mode" id="tutMode"></span><span class="tut-note" id="tutWaitNote">Only the host can skip</span><button class="btn sm" id="tutSkip" type="button">Skip &#9197;</button></div>
+    <div class="tut-stage" id="tutStage"></div>
+    <div class="tut-dots" id="tutDots"></div>
+    <div class="tut-bar"><i id="tutBar"></i></div>
+  </div>
+</div>
 <div id="emoTray" role="dialog" aria-label="Emoji" hidden><div class="emo-grid" id="emoGrid"></div></div>
 <div id="mySticker" aria-hidden="true"></div>
 <div id="targetAlert" hidden role="alert"><div id="targetText"></div></div>
@@ -2603,7 +2665,7 @@ function showScreen(name) {
   $('#lobbyPanel').hidden = name !== 'lobby';
   const game = name === 'game';
   $('#hud').hidden = !game; if (!game) setEmoTray(false); $('#bar').hidden = !game || view.mySeat < 0; $('#deckLbl').hidden = !game; if (!game) $('#mdeckLbl').hidden = true; $('#discLbl').hidden = !game; $('#labels').hidden = !game;
-  if (!game) { $('#react').hidden = true; $('#takeover').hidden = true; }
+  if (!game) { $('#react').hidden = true; $('#takeover').hidden = true; try { if (!Tutorial.local) Tutorial.close(); } catch (e) {} }
   view.screen = name;
   Sfx.music(game ? Sfx.tableTrack(currentStage) : 'lobby'); syncWakeLock();
 }
@@ -2928,6 +2990,7 @@ function startSolo() {
 }
 function stopEngine() {
   engineTok++; waiters.splice(0).forEach(w => clearTimeout(w.timer)); nopeWait = null;
+  if (tutWait) tutWait();
   if (intentsUnsub) { intentsUnsub(); intentsUnsub = null; }
   G = null;
 }
@@ -2949,6 +3012,8 @@ async function startEngine(fresh) {
   const tok = ++engineTok;
   listenIntents();
   if (fresh) {
+    await runTutorial(tok);
+    if (!stillHost(tok)) return;
     await emitEv({k: 'deal'}, G.mode === 'board' ? 2600 : 3400);
     if (!stillHost(tok)) return;
     if (G.mode !== 'board') {
@@ -4041,6 +4106,85 @@ const BoardView = (() => {
 // Disc pictures for prompts (Move-or-flip choice, Alter the Future).
 function makeDiscURLs() { for (const t of Object.keys(DISCS)) faceURL['disc_' + t] = discCanvas(t).toDataURL('image/png'); }
 
+/* ======================= How-to-play video (animated, plays when a match starts) ======================= */
+const TUT_STEP = 6000;
+const spaceURLs = {};
+const spaceURL = v => spaceURLs[v] || (spaceURLs[v] = spaceCanvas(v).toDataURL('image/png'));
+function tutSlides(mode) {
+  const card = (t, cls = '', st = '') => `<img class="t-card ${cls}" style="${st}" src="${faceURL[t] || ''}" alt="${esc(tname(t))}">`;
+  const disc = (t, cls = '', st = '') => `<img class="t-disc ${cls}" style="${st}" src="${faceURL['disc_' + t] || ''}" alt="${esc(DISCS[t].label)}">`;
+  const emo = (e, cls = '') => `<img class="t-emo ${cls}" src="emoji/${e}.png" alt="">`;
+  const arrow = '<span class="t-arrow">&rarr;</span>';
+  if (mode === 'board') return [
+    {title: 'Race to the Ribbon', text: 'Everyone starts in the Litter Box. The first cat to land <b>exactly</b> on the Ribbon wins the race.',
+      art: `<div class="t-board"><img src="boards/calm.jpg" alt="">${emo('hello', 't-walk')}<span class="t-ribbon">WIN</span></div>`},
+    {title: 'Your turn', text: 'Play as many Action Cards as you like. Then tap the <b>Move Deck</b> to draw a Move Disc and move that many spaces.',
+      art: `${card('b_mega', 't-in', 'animation-delay:.1s')}${card('b_magnet', 't-in', 'animation-delay:.4s')}${arrow}${disc('m3', 't-flipin', 'animation-delay:1.2s')}`},
+    {title: 'Move Discs', text: 'Some discs let you flip the board. <b>Cut the Line</b> jumps you ahead of the next cat, and a <b>Danger Magnet</b> drags you to the next Exploding Kitten.',
+      art: ['m2', 'o3', 'f4', 'cut', 'mag'].map((t, i) => disc(t, 't-pop', `animation-delay:${.2 + i * .35}s`)).join('')},
+    {title: 'Where you land', text: '<b>Number:</b> draw that many cards. <b>Exploding Kitten:</b> play a Defuse, or explode: swap places with the last cat and discard down to 3.',
+      art: `<img class="t-space t-pop" src="${spaceURL(2)}" alt="">${arrow}${card('toast', 't-in', 'animation-delay:.6s')}${card('melon', 't-in', 'animation-delay:.8s')}<span class="t-gap"></span><img class="t-space t-shake" src="${spaceURL('K')}" style="animation-delay:1.4s" alt="">${arrow}${card('b_defuse', 't-in', 'animation-delay:2s')}`},
+    {title: 'Flip the board', text: 'Flip it and <b>every space changes</b>. Chaos Mode is packed with Exploding Kittens, so time your flip to trap a rival!',
+      art: `<div class="t-flipboard"><img src="boards/calm.jpg" alt=""><img src="boards/chaos.jpg" alt=""></div>`},
+    {title: 'NOW cards', text: 'Cards with <b>NOW</b> can be played on anyone\'s turn, right before they draw a disc. <b>Nope NOW</b> cancels an Action Card.',
+      art: ['b_nope', 'b_flip', 'b_magnet', 'b_alter'].map((t, i) => card(t, 't-in', `animation-delay:${.2 + i * .3}s`)).join('')},
+    {title: 'Good luck!', text: 'Land on the Ribbon first and you win. Tap any card to read it, or open the Card Guide any time.', art: `${emo('party', 't-bounce')}${emo('gg', 't-bounce t-late')}`},
+  ];
+  const s = [
+    {title: 'Don\'t explode!', text: 'Draw an <b>Exploding Kitten</b> and you are out, unless you have a Defuse. The last cat standing wins.', art: `${card('boom', 't-shake big')}`},
+    {title: 'Your turn', text: 'Play as many cards as you like, or none. Then <b>draw one card</b> from the pile to end your turn.',
+      art: `${card('skip', 't-in', 'animation-delay:.1s')}${card('future', 't-in', 'animation-delay:.35s')}${card('favor', 't-in', 'animation-delay:.6s')}${arrow}<img class="t-card t-flipin" style="animation-delay:1.3s" src="${backURL}" alt="Draw pile">`},
+    {title: 'Defuse', text: 'Everyone starts with a <b>Defuse</b>. Play it to survive a kitten, then secretly hide the kitten back in the deck.',
+      art: `${card('boom', 't-shake')}${arrow}${card('defuse', 't-stamp', 'animation-delay:1s')}`},
+    {title: 'Action cards', text: '<b>Attack</b> and <b>Skip</b> end your turn without drawing. <b>See the Future</b> peeks at the top 3 cards. <b>Shuffle</b> mixes the pile.',
+      art: ['attack', 'skip', 'future', 'shuffle'].map((t, i) => card(t, 't-in', `animation-delay:${.2 + i * .35}s`)).join('')},
+    {title: 'Nope!', text: '<b>Nope</b> stops any action, even on someone else\'s turn. Tap it when the red bar appears.',
+      art: `<div class="t-stack">${card('attack')}${card('nope', 't-stamp', 'animation-delay:1s')}</div>`},
+    {title: 'Cat combos', text: '<b>Two</b> matching cats steal a random card. <b>Three</b> of a kind lets you name the card you want.',
+      art: `${card('toast', 't-in')}${card('toast', 't-in', 'animation-delay:.3s')}<span class="t-gap"></span>${card('melon', 't-in', 'animation-delay:1s')}${card('melon', 't-in', 'animation-delay:1.3s')}${card('melon', 't-in', 'animation-delay:1.6s')}`},
+  ];
+  if (mode === 'party') s.push({title: 'Party deck', text: 'The Party deck has <b>49 card types</b>. Tap any card to read it, or open the Card Guide.',
+    art: ['targeted', 'sticky', 'clone', 'howl', 'suncat'].map((t, i) => card(t, 't-in', `animation-delay:${.2 + i * .25}s`)).join('')});
+  s.push({title: 'Good luck!', text: 'Survive until everyone else explodes. May the kittens be kind to you!', art: `${emo('party', 't-bounce')}${emo('exploded', 't-bounce t-late')}`});
+  return s;
+}
+const tutLen = mode => tutSlides(mode).length * TUT_STEP + 400;
+
+// Engine side: the match waits while the video plays; only the host can end it early.
+let tutWait = null;
+async function runTutorial(tok) {
+  const ms = tutLen(G.mode);
+  await emitEv({k: 'tutorial', mode: G.mode, ms});
+  if (!stillHost(tok)) return;
+  await new Promise(res => { const t = setTimeout(() => done(), ms); function done() { clearTimeout(t); tutWait = null; res(); } tutWait = done; });
+  if (!stillHost(tok)) return;
+  await emitEv({k: 'tutorialEnd'}, 300);
+}
+
+const Tutorial = (() => {
+  let slides = [], idx = 0, timer = 0, local = false, start = 0, raf = 0;
+  function show(i) {
+    idx = i; const sl = slides[i];
+    $('#tutStage').innerHTML = `<div class="t-art">${sl.art}</div><h3>${sl.title}</h3><p>${sl.text}</p>`;
+    $('#tutDots').innerHTML = slides.map((_, k) => `<i class="${k === i ? 'on' : k < i ? 'done' : ''}"></i>`).join('');
+    clearTimeout(timer);
+    timer = setTimeout(() => { if (idx + 1 < slides.length) show(idx + 1); else if (local) close(); }, TUT_STEP);
+  }
+  function tick() { if ($('#tut').hidden) return; $('#tutBar').style.transform = `scaleX(${Math.min(1, (performance.now() - start) / (slides.length * TUT_STEP))})`; raf = requestAnimationFrame(tick); }
+  function open(mode, {canSkip, localOnly = false}) {
+    slides = tutSlides(mode); local = localOnly; start = performance.now();
+    $('#tutMode').textContent = mode === 'board' ? 'Board game' : mode === 'party' ? 'Party deck' : 'Classic';
+    $('#tutSkip').hidden = !canSkip; $('#tutWaitNote').hidden = canSkip;
+    $('#tut').hidden = false; show(0);
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+    if (canSkip) setTimeout(() => $('#tutSkip').focus(), 50);
+  }
+  function close() { clearTimeout(timer); cancelAnimationFrame(raf); $('#tut').hidden = true; $('#tutStage').innerHTML = ''; local = false; }
+  $('#tutSkip').addEventListener('click', () => { if (local) return close(); if (tutWait) tutWait(); else close(); });
+  return {open, close, get local() { return local; }, get open_() { return !$('#tut').hidden; }};
+})();
+$('#tutWatch').addEventListener('click', () => { closeGuide(); Tutorial.open((view.screen === 'game' && view.snap && view.snap.mode) || me.deck, {canSkip: true, localOnly: true}); });
+
 /* ======================= Roulette arrow, tombstones, fireworks, confetti ======================= */
 const rouletteArrow = (() => {
   const shape = new THREE.Shape();
@@ -4237,7 +4381,7 @@ function setupGame(snap) {
   resize();
   BoardView.setup(snap);
   const first = snap.events[0];
-  if (first && first.k === 'deal' && first.seq === 1) {
+  if (first && (first.k === 'deal' || first.k === 'tutorial') && first.seq === 1) {
     view.lastSeq = 0;
     view.mirror = {hands: snap.seats.map(() => []), alive: snap.seats.map(() => true), deckN: first.after.deckN + snap.seats.length * (snap.mode === 'board' ? 5 : 8) - (snap.extra || []).length, kit: 0, cur: 0, tl: 1, top: null, fx: first.after.fx, board: first.after.board};
   } else {
@@ -4273,7 +4417,7 @@ async function pump() {
     if (!fast) { try { await animEvent(e); } catch (err) { console.warn(err); } }
     else logEvent(e);
     if (started !== view.started) break;
-    view.mirror = e.after; applyMirror(fast);
+    if (e.k !== 'tutorial') { view.mirror = e.after; applyMirror(fast); }  // cards are dealt after the video
     updatePromptUI();
   }
   view.playing = false;
@@ -4437,6 +4581,7 @@ const tname = t => String(t).startsWith('disc_') ? DISCS[t.slice(5)].label : (TY
 function logEvent(e) {
   const T = tname;
   switch (e.k) {
+    case 'tutorial': log('How-to-play video is playing.'); break;
     case 'deal': log(view.snap && view.snap.mode === 'board' ? 'Action Cards dealt: 5 each. Everyone starts in the Litter Box.' : 'Cards dealt: 7 plus a Defuse each.'); break;
     case 'bcards': log(`${nm(e.p)} drew ${e.cards.length} Action Card${e.cards.length === 1 ? '' : 's'}${e.why === 'space' ? ' from the space' : e.why === 'empty' ? ' (empty hand)' : ''}.`); break;
     case 'disc': log(e.from === 'ditto' ? `${nm(e.p)} reused ${DISCS[e.disc].label}.` : `${nm(e.p)} drew ${DISCS[e.disc].label}${e.ignore ? ' (thrown away)' : ''}.`); break;
@@ -4631,6 +4776,8 @@ async function animEvent(e) {
     }
     case 'doom': flash(); shake = .6; Sfx.boom(); showFx('CAT-ASTROPHE', '#ff3a2a'); banner('Cat-astrophe! The Shadow Cat cannot be defused anymore.', '#ff3a2a'); await sleep(800); break;
     case 'roulette': await playRoulette(e.p); break;
+    case 'tutorial': Tutorial.open(e.mode, {canSkip: !!(G && G.host === me.id)}); break;
+    case 'tutorialEnd': if (!Tutorial.local) Tutorial.close(); break;
     case 'bcards':
       for (const c of e.cards) {
         Sfx.flip();
